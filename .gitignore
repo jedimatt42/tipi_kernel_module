@@ -1,7 +1,7 @@
 modules.order
 Module.symvers
-tipi_gpio.ko
-tipi_gpio.mod
-tipi_gpio.mod.c
-tipi_gpio.mod.o
-tipi_gpio.o
+*.ko
+*.mod
+*.mod.c
+*.o
+*.cmd
