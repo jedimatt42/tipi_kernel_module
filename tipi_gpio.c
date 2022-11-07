@@ -39,12 +39,15 @@ static struct cdev my_device;
  * Plan: 
  *  Implement getTC, getTD, setRD, setRC as needed by tipi/services/libtipi_gpio/tipiports.c
  *
- *  Writing to /dev/tipi_gpio will set one of 2 tipi registers
- *  'D' + <byte> : will set output 'data' byte 
- *  'C' + <byte> : will set output 'control' byte
+ *  Writing a byte to /dev/tipi_gpio_c will perform setRC
+ *  Writing a byte to /dev/tipi_gpio_d will perform setRD
  *
- *  Reading from /dev/tipi_gpio will return the value of <TD> and <TC> --- this is weird... I want to poll one register at a time.
- *  does that mean I need to create a control file, and a data file?  
+ *  Reading a byte from /dev/tipi_gpio_c will perform getTC
+ *  Reading a byte from /dev/tipi_gpio_d will perform getTD
+ *
+ *  Reading a byte from /dev/tipi_gpio_r will get status of reset signal
+ *
+ *  None of this is implemented yet.
  */
 
 /**
