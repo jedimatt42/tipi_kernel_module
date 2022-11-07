@@ -292,8 +292,23 @@ static int __init ModuleInit(void) {
     goto CleanupRT;
   }
 
+  // PIN_RESET init
+  if(gpio_request(PIN_RESET, "tipi-reset")) {
+    printk("Can not allocate PIN_RESET\n");
+    goto CleanupRT;
+  }
+
+  // PIN_RESET direction
+  if(gpio_direction_input(PIN_R_RT)) {
+    printk("Can not set PIN_RESET to input!\n");
+    goto CleanupReset;
+  }
+
   /* success */
   return 0;
+
+CleanupReset:
+  gpio_free(PIN_RESET);
 
 CleanupRT:
   gpio_free(PIN_R_RT);
@@ -346,6 +361,8 @@ static void __exit ModuleExit(void) {
   gpio_free(PIN_R_DOUT);
   gpio_free(PIN_R_DIN);
   gpio_free(PIN_R_LE);
+
+  gpio_free(PIN_RESET);
 
   cdev_del(&reset_device);
   cdev_del(&data_device);
