@@ -31,6 +31,19 @@ static struct cdev reset_device;
 /* TIPI Watchdog reset signal pin */
 #define PIN_RESET 26
 
+static struct gpio output_gpios[] = {
+  { PIN_R_RT, GPIOF_OUT_INIT_LOW, "tipi-rt" },
+  { PIN_R_CD, GPIOF_OUT_INIT_LOW, "tipi-cd" },
+  { PIN_R_CLK, GPIOF_OUT_INIT_LOW, "tipi-clk" },
+  { PIN_R_DOUT, GPIOF_OUT_INIT_LOW, "tipi-dout" },
+  { PIN_R_LE, GPIOF_OUT_INIT_LOW, "tipi-le" }
+};
+
+static struct gpio input_gpios[] = {
+  { PIN_R_DIN, GPIOF_DIR_IN, "tipi-din" },
+  { PIN_RESET, GPIOF_DIR_IN, "tipi-reset" },
+};
+
 /* Register select values */
 #define SEL_RC 0
 #define SEL_RD 1
@@ -220,113 +233,21 @@ static int __init ModuleInit(void) {
 
   // Initialize GPIO access
 
-  // PIN_R_LE init
-  if(gpio_request(PIN_R_LE, "tipi-r-le")) {
-    printk("Can not allocate PIN_R_LE\n");
+  if(gpio_request_array(input_gpios, ARRAY_SIZE(input_gpios))) {
+    printk("Can not allocate input pins\n");
     goto CleanupFile2;
   }
 
-  // PIN_R_LE direction
-  if(gpio_direction_output(PIN_R_LE, 0)) {
-    printk("Can not set PIN_R_LE to output!\n");
-    goto CleanupLE;
-  }
-
-  // PIN_R_DIN init
-  if(gpio_request(PIN_R_DIN, "tipi-r-din")) {
-    printk("Can not allocate GPIO 17\n");
-    goto CleanupLE;
-  }
-
-  // PIN_R_DIN direction
-  if(gpio_direction_input(PIN_R_DIN)) {
-    printk("Can not set PIN_R_DIN to input!\n");
-    goto CleanupDIN;
-  }
-
-  // PIN_R_DOUT init
-  if(gpio_request(PIN_R_DOUT, "tipi-r-dout")) {
-    printk("Can not allocate PIN_R_DOUT\n");
-    goto CleanupDIN;
-  }
-
-  // PIN_R_DOUT direction
-  if(gpio_direction_output(PIN_R_DOUT, 0)) {
-    printk("Can not set PIN_R_DOUT to output!\n");
-    goto CleanupDOUT;
-  }
-
-  // PIN_R_CLK init
-  if(gpio_request(PIN_R_CLK, "tipi-r-clk")) {
-    printk("Can not allocate PIN_R_CLK\n");
-    goto CleanupDOUT;
-  }
-
-  // PIN_R_CLK direction
-  if(gpio_direction_output(PIN_R_CLK, 0)) {
-    printk("Can not set PIN_R_CLK to output!\n");
-    goto CleanupCLK;
-  }
-
-  // PIN_R_CD init
-  if(gpio_request(PIN_R_CD, "tipi-r-cd")) {
-    printk("Can not allocate PIN_R_CD\n");
-    goto CleanupCLK;
-  }
-
-  // PIN_R_CD direction
-  if(gpio_direction_output(PIN_R_CD, 0)) {
-    printk("Can not set PIN_R_CD to output!\n");
-    goto CleanupCD;
-  }
-
-  // PIN_R_RT init
-  if(gpio_request(PIN_R_RT, "tipi-r-rt")) {
-    printk("Can not allocate PIN_R_RT\n");
-    goto CleanupCD;
-  }
-
-  // PIN_R_RT direction
-  if(gpio_direction_output(PIN_R_RT, 0)) {
-    printk("Can not set PIN_R_RT to output!\n");
-    goto CleanupRT;
-  }
-
-  // PIN_RESET init
-  if(gpio_request(PIN_RESET, "tipi-reset")) {
-    printk("Can not allocate PIN_RESET\n");
-    goto CleanupRT;
-  }
-
-  // PIN_RESET direction
-  if(gpio_direction_input(PIN_R_RT)) {
-    printk("Can not set PIN_RESET to input!\n");
-    goto CleanupReset;
+  if(gpio_request_array(output_gpios, ARRAY_SIZE(output_gpios))) {
+    printk("Can not allocate input pins\n");
+    goto CleanupInputGpios;
   }
 
   /* success */
   return 0;
 
-CleanupReset:
-  gpio_free(PIN_RESET);
-
-CleanupRT:
-  gpio_free(PIN_R_RT);
-
-CleanupCD:
-  gpio_free(PIN_R_CD);
-
-CleanupCLK:
-  gpio_free(PIN_R_CLK);
-
-CleanupDOUT:
-  gpio_free(PIN_R_DOUT);
-
-CleanupDIN:
-  gpio_free(PIN_R_DIN);
-
-CleanupLE:
-  gpio_free(PIN_R_LE);
+CleanupInputGpios:
+  gpio_free_array(input_gpios, ARRAY_SIZE(input_gpios));
 
 CleanupFile2:
   device_destroy(tipi_class, tipi_device_nr + 2);
@@ -355,14 +276,8 @@ static void __exit ModuleExit(void) {
   gpio_set_value(PIN_R_DOUT, 0);
   gpio_set_value(PIN_R_LE, 0);
 
-  gpio_free(PIN_R_RT);
-  gpio_free(PIN_R_CD);
-  gpio_free(PIN_R_CLK);
-  gpio_free(PIN_R_DOUT);
-  gpio_free(PIN_R_DIN);
-  gpio_free(PIN_R_LE);
-
-  gpio_free(PIN_RESET);
+  gpio_free_array(input_gpios, ARRAY_SIZE(input_gpios));
+  gpio_free_array(output_gpios, ARRAY_SIZE(output_gpios));
 
   cdev_del(&reset_device);
   cdev_del(&data_device);
