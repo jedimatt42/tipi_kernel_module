@@ -38,6 +38,13 @@ static struct cdev my_device;
 /*
  * Plan: 
  *  Implement getTC, getTD, setRD, setRC as needed by tipi/services/libtipi_gpio/tipiports.c
+ *
+ *  Writing to /dev/tipi_gpio will set one of 2 tipi registers
+ *  'D' + <byte> : will set output 'data' byte 
+ *  'C' + <byte> : will set output 'control' byte
+ *
+ *  Reading from /dev/tipi_gpio will return the value of <TD> and <TC> --- this is weird... I want to poll one register at a time.
+ *  does that mean I need to create a control file, and a data file?  
  */
 
 /**
@@ -73,10 +80,11 @@ static ssize_t driver_write(struct file *File, const char *user_buffer, size_t c
   /* Get amount of data to copy */
   to_copy = min(count, sizeof(value));
 
-  /* Copy data to user */
+  /* Copy data from user */
   not_copied = copy_from_user(&value, user_buffer, to_copy);
 
   /* Setting the LED */
+  /*
   switch(value) {
     case '0':
       gpio_set_value(4, 0);
@@ -87,6 +95,7 @@ static ssize_t driver_write(struct file *File, const char *user_buffer, size_t c
     default:
       printk("Invalid Input!\n");
       break;
+      */
   }
 
   /* Calculate data */
