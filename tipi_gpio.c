@@ -70,26 +70,38 @@ static struct gpio input_gpios[] = {
  */
 
 /**
- * @brief Read data out of the buffer
+ * @brief Read reset line from tipi_reset file
+ *
+ * Provide a string with '0' + '\n' if the pin is LOW, return nothing if the pin is HIGH
  */
-static ssize_t driver_read(struct file *File, char *user_buffer, size_t count, loff_t *offs) {
-  int to_copy, not_copied, delta;
-  char tmp[3] = " \n";
+static ssize_t reset_read_file(struct file *File, char *user_buffer, size_t count, loff_t *offs) {
+  int to_copy, not_copied, delta, pin;
+  char tmp[1] = " ";
 
   /* Get amount of data to copy */
   to_copy = min(count, sizeof(tmp));
 
   /* Read value of button */
-  printk("Value of button: %d\n", gpio_get_value(17));
-  tmp[0] = gpio_get_value(17) + '0';
+  pin = gpio_get_value(PIN_RESET);
 
-  /* Copy data to user */
-  not_copied = copy_to_user(user_buffer, &tmp, to_copy);
+  if (pin == 0) {
+    tmp[0] = '0';
+    /* Copy data to user */
+    not_copied = copy_to_user(user_buffer, &tmp, to_copy);
 
-  /* Calculate data */
-  delta = to_copy - not_copied;
+    /* Calculate data */
+    delta = to_copy - not_copied;
+    return delta;
+  } else {
+    return 0;
+  }
+}
 
-  return delta;
+/**
+ * @brief Read data out of the buffer
+ */
+static ssize_t driver_read(struct file *File, char *user_buffer, size_t count, loff_t *offs) {
+  return 0;
 }
 
 /**
@@ -160,7 +172,8 @@ static struct file_operations data_fops = {
 static struct file_operations reset_fops = {
   .owner = THIS_MODULE,
   .open = driver_open,
-  .release = driver_close
+  .release = driver_close,
+  .read = reset_read_file
 };
 
 /**
