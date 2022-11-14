@@ -15,7 +15,6 @@ static dev_t tipi_device_nr;
 static struct class *tipi_class;
 static struct cdev control_device;
 static struct cdev data_device;
-static struct cdev reset_device;
 
 #define DRIVER_NAME "tipi_gpio"
 #define DRIVER_CLASS "TIPI"
@@ -28,9 +27,6 @@ static struct cdev reset_device;
 #define PIN_R_DIN 20
 #define PIN_R_LE 19
 
-/* TIPI Watchdog reset signal pin */
-#define PIN_RESET 26
-
 static struct gpio output_gpios[] = {
   { PIN_R_RT, GPIOF_OUT_INIT_LOW, "tipi-rt" },
   { PIN_R_CD, GPIOF_OUT_INIT_LOW, "tipi-cd" },
@@ -40,8 +36,7 @@ static struct gpio output_gpios[] = {
 };
 
 static struct gpio input_gpios[] = {
-  { PIN_R_DIN, GPIOF_DIR_IN, "tipi-din" },
-  { PIN_RESET, GPIOF_DIR_IN, "tipi-reset" },
+  { PIN_R_DIN, GPIOF_DIR_IN, "tipi-din" }
 };
 
 /* Register select values */
@@ -50,9 +45,9 @@ static struct gpio input_gpios[] = {
 #define SEL_TC 2
 #define SEL_TD 3
 
+#define DEV_REGION_SIZE 2
 #define DEV_NAME_CONTROL "tipi_control"
 #define DEV_NAME_DATA "tipi_data"
-#define DEV_NAME_RESET "tipi_reset"
 
 /*
  * Plan: 
@@ -64,38 +59,8 @@ static struct gpio input_gpios[] = {
  *  Reading a byte from /dev/tipi_control will perform getTC
  *  Reading a byte from /dev/tipi_data will perform getTD
  *
- *  Reading a byte from /dev/tipi_reset will get status of reset signal
- *
  *  None of this is implemented yet.
  */
-
-/**
- * @brief Read reset line from tipi_reset file
- *
- * Provide a string with '0' + '\n' if the pin is LOW, return nothing if the pin is HIGH
- */
-static ssize_t reset_read_file(struct file *File, char *user_buffer, size_t count, loff_t *offs) {
-  int to_copy, not_copied, delta, pin;
-  char tmp[1] = " ";
-
-  /* Get amount of data to copy */
-  to_copy = min(count, sizeof(tmp));
-
-  /* Read value of button */
-  pin = gpio_get_value(PIN_RESET);
-
-  if (pin == 0) {
-    tmp[0] = '0';
-    /* Copy data to user */
-    not_copied = copy_to_user(user_buffer, &tmp, to_copy);
-
-    /* Calculate data */
-    delta = to_copy - not_copied;
-    return delta;
-  } else {
-    return 0;
-  }
-}
 
 /**
  * @brief Read data out of the buffer
@@ -108,34 +73,6 @@ static ssize_t driver_read(struct file *File, char *user_buffer, size_t count, l
  * @brief Write data to buffer
  */
 static ssize_t driver_write(struct file *File, const char *user_buffer, size_t count, loff_t *offs) {
-/*
-  int to_copy, not_copied, delta;
-  char value;
-
-  // Get amount of data to copy
-  to_copy = min(count, sizeof(value));
-
-  // Copy data from user
-  not_copied = copy_from_user(&value, user_buffer, to_copy);
-
-  // Setting the LED
-  switch(value) {
-    case '0':
-      gpio_set_value(4, 0);
-      break;
-    case '1':
-      gpio_set_value(4, 1);
-      break;
-    default:
-      printk("Invalid Input!\n");
-      break;
-  }
-
-  // Calculate data 
-  delta = to_copy - not_copied;
-
-  return delta; 
-*/
   return 0;
 }
 
@@ -169,13 +106,6 @@ static struct file_operations data_fops = {
   .release = driver_close
 };
 
-static struct file_operations reset_fops = {
-  .owner = THIS_MODULE,
-  .open = driver_open,
-  .release = driver_close,
-  .read = reset_read_file
-};
-
 /**
  * @brief This function is called, when the module is loaded into the kernel
  */
@@ -183,7 +113,7 @@ static int __init ModuleInit(void) {
   printk("Hello, Kernel!\n");
 
   // Allocate a device nr 
-  if( alloc_chrdev_region(&tipi_device_nr, 0, 3, DRIVER_NAME) < 0) {
+  if( alloc_chrdev_region(&tipi_device_nr, 0, DEV_REGION_SIZE, DRIVER_NAME) < 0) {
     printk("Device number for tipi_gpio could not be allocated!\n");
     return -1;
   }
@@ -229,26 +159,11 @@ static int __init ModuleInit(void) {
     goto CleanupFile1;
   }
 
-  // create device file /dev/tipi_reset
-  if(device_create(tipi_class, NULL, tipi_device_nr + 2, NULL, DEV_NAME_RESET) == NULL) {
-    printk("Can not create device file /dev/%s\n", DEV_NAME_RESET);
-    goto CleanupFile1;
-  }
-
-  // Initialize device file operations /dev/tipi_reset
-  cdev_init(&reset_device, &reset_fops);
-
-  // Registering /dev/tipi_reset to kernel
-  if(cdev_add(&reset_device, tipi_device_nr + 2, 1) == -1) {
-    printk("Registering of device to kernel failed!\n");
-    goto CleanupFile2;
-  }
-
   // Initialize GPIO access
 
   if(gpio_request_array(input_gpios, ARRAY_SIZE(input_gpios))) {
     printk("Can not allocate input pins\n");
-    goto CleanupFile2;
+    goto CleanupFile1;
   }
 
   if(gpio_request_array(output_gpios, ARRAY_SIZE(output_gpios))) {
@@ -262,9 +177,6 @@ static int __init ModuleInit(void) {
 CleanupInputGpios:
   gpio_free_array(input_gpios, ARRAY_SIZE(input_gpios));
 
-CleanupFile2:
-  device_destroy(tipi_class, tipi_device_nr + 2);
-
 CleanupFile1:
   device_destroy(tipi_class, tipi_device_nr + 1);
 
@@ -275,7 +187,7 @@ CleanupClass:
   class_destroy(tipi_class);
 
 CleanupDevices:
-  unregister_chrdev_region(tipi_device_nr, 3);
+  unregister_chrdev_region(tipi_device_nr, DEV_REGION_SIZE);
   return -1;
 }
 
@@ -292,14 +204,12 @@ static void __exit ModuleExit(void) {
   gpio_free_array(input_gpios, ARRAY_SIZE(input_gpios));
   gpio_free_array(output_gpios, ARRAY_SIZE(output_gpios));
 
-  cdev_del(&reset_device);
   cdev_del(&data_device);
   cdev_del(&control_device);
-  device_destroy(tipi_class, tipi_device_nr + 2);
   device_destroy(tipi_class, tipi_device_nr + 1);
   device_destroy(tipi_class, tipi_device_nr);
   class_destroy(tipi_class);
-  unregister_chrdev_region(tipi_device_nr, 3);
+  unregister_chrdev_region(tipi_device_nr, DEV_REGION_SIZE);
   printk("tipi_gpio cleaned up\n");
 }
 
