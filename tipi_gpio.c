@@ -11,7 +11,8 @@ MODULE_AUTHOR("Matthew Splett / jedimatt42.com");
 MODULE_DESCRIPTION("TI-99/4A TIPI GPIO");
 
 /* Variables for device and device class */
-static dev_t tipi_device_nr;
+static dev_t tipi_control_nr;
+static dev_t tipi_data_nr;
 static struct class *tipi_class;
 static struct cdev control_device;
 static struct cdev data_device;
@@ -113,13 +114,13 @@ static int __init ModuleInit(void) {
   printk("Hello, Kernel!\n");
 
   // Allocate a device nr 
-  if( alloc_chrdev_region(&tipi_device_nr, 0, DEV_REGION_SIZE, DRIVER_NAME) < 0) {
+  if( alloc_chrdev_region(&tipi_control_nr, 0, DEV_REGION_SIZE, DRIVER_NAME) < 0) {
     printk("Device number for tipi_gpio could not be allocated!\n");
     return -1;
   }
-  printk("registerd tipi_gpio Major: %d, Minor: %d - %d\n", tipi_device_nr >> 20, 
-		  tipi_device_nr && 0xfffff,
-		  (tipi_device_nr && 0xfffff) + 2);
+  tipi_data_nr = tipi_control_nr + 1;
+  printk("registerd tipi_control Major: %d, Minor: %d\n", tipi_control_nr >> 20, tipi_control_nr & 0xfffff);
+  printk("registerd tipi_data Major: %d, Minor: %d\n", tipi_data_nr >> 20, tipi_data_nr & 0xfffff);
 
   // Create device class
   if((tipi_class = class_create(THIS_MODULE, DRIVER_CLASS)) == NULL) {
@@ -130,7 +131,7 @@ static int __init ModuleInit(void) {
   // -- Create /dev/ files
 
   // create device file /dev/tipi_control
-  if(device_create(tipi_class, NULL, tipi_device_nr, NULL, DEV_NAME_CONTROL) == NULL) {
+  if(device_create(tipi_class, NULL, tipi_control_nr, NULL, DEV_NAME_CONTROL) == NULL) {
     printk("Can not create device file /dev/%s\n", DEV_NAME_CONTROL);
     goto CleanupClass;
   }
@@ -139,13 +140,13 @@ static int __init ModuleInit(void) {
   cdev_init(&control_device, &control_fops);
 
   // Registering /dev/tipi_control to kernel
-  if(cdev_add(&control_device, tipi_device_nr, 1) == -1) {
+  if(cdev_add(&control_device, tipi_control_nr, 1) == -1) {
     printk("Registering of device to kernel failed!\n");
     goto CleanupFile0;
   }
 
   // create device file /dev/tipi_data
-  if(device_create(tipi_class, NULL, tipi_device_nr + 1, NULL, DEV_NAME_DATA) == NULL) {
+  if(device_create(tipi_class, NULL, tipi_data_nr, NULL, DEV_NAME_DATA) == NULL) {
     printk("Can not create device file /dev/%s\n", DEV_NAME_DATA);
     goto CleanupFile0;
   }
@@ -154,7 +155,7 @@ static int __init ModuleInit(void) {
   cdev_init(&data_device, &data_fops);
 
   // Registering /dev/tipi_data to kernel
-  if(cdev_add(&data_device, tipi_device_nr + 1, 1) == -1) {
+  if(cdev_add(&data_device, tipi_data_nr, 1) == -1) {
     printk("Registering of device to kernel failed!\n");
     goto CleanupFile1;
   }
@@ -178,16 +179,16 @@ CleanupInputGpios:
   gpio_free_array(input_gpios, ARRAY_SIZE(input_gpios));
 
 CleanupFile1:
-  device_destroy(tipi_class, tipi_device_nr + 1);
+  device_destroy(tipi_class, tipi_data_nr);
 
 CleanupFile0:
-  device_destroy(tipi_class, tipi_device_nr);
+  device_destroy(tipi_class, tipi_control_nr);
 
 CleanupClass:
   class_destroy(tipi_class);
 
 CleanupDevices:
-  unregister_chrdev_region(tipi_device_nr, DEV_REGION_SIZE);
+  unregister_chrdev_region(tipi_control_nr /* the first one */, DEV_REGION_SIZE);
   return -1;
 }
 
@@ -206,10 +207,10 @@ static void __exit ModuleExit(void) {
 
   cdev_del(&data_device);
   cdev_del(&control_device);
-  device_destroy(tipi_class, tipi_device_nr + 1);
-  device_destroy(tipi_class, tipi_device_nr);
+  device_destroy(tipi_class, tipi_data_nr);
+  device_destroy(tipi_class, tipi_control_nr);
   class_destroy(tipi_class);
-  unregister_chrdev_region(tipi_device_nr, DEV_REGION_SIZE);
+  unregister_chrdev_region(tipi_control_nr /* the first one */, DEV_REGION_SIZE);
   printk("tipi_gpio cleaned up\n");
 }
 
