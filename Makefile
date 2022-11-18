@@ -1,6 +1,6 @@
 obj-m += tipi_gpio.o
 
-all:
+all: pinmap.sh
 	make -C /lib/modules/$(shell uname -r)/build M=$(PWD) modules
 
 clean:

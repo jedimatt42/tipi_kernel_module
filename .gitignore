@@ -5,3 +5,4 @@ Module.symvers
 *.mod.c
 *.o
 *.cmd
+pinmap.sh
