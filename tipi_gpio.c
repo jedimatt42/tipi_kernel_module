@@ -21,6 +21,7 @@ static struct cdev data_device;
 #define DRIVER_CLASS "TIPI"
 
 /* TIPI communication pins */
+/* Raspberry PI numbers */
 #define PIN_R_RT 13
 #define PIN_R_CD 21
 #define PIN_R_CLK 6
@@ -50,6 +51,7 @@ static struct gpio input_gpios[] = {
 #define DEV_NAME_CONTROL "tipi_control"
 #define DEV_NAME_DATA "tipi_data"
 
+
 /*
  * Plan: 
  *  Implement getTC, getTD, setRD, setRC as needed by tipi/services/libtipi_gpio/tipiports.c
@@ -62,6 +64,99 @@ static struct gpio input_gpios[] = {
  *
  *  None of this is implemented yet.
  */
+
+// --------------- TIPI io ----------------------------
+
+// volatile to force slow memory access.
+volatile long delmem = 55;
+
+int delayloop = 50;
+
+inline void signalDelay(void) {
+  int i = 0;
+  for(i = 0; i < delayloop; i++) {
+    delmem *= i;
+  }
+}
+
+inline void regSelect(int reg) {
+  gpio_set_value(PIN_R_RT, reg & 0x02);
+  gpio_set_value(PIN_R_CD, reg & 0x01);
+  signalDelay();
+}
+
+inline unsigned char parity(unsigned char input) {
+  unsigned char piParity = input;
+  piParity ^= piParity >> 4;
+  piParity ^= piParity >> 2;
+  piParity ^= piParity >> 1;
+  return piParity & 0x01;
+}
+
+static unsigned char readReg(int reg) {
+  int i = 7;
+  unsigned char value = 0;
+  int ok = 0;
+  while(! ok) { // retry until parity matches
+    value = 0;
+    regSelect(reg);
+    gpio_set_value(PIN_R_LE, 1);
+    signalDelay();
+    gpio_set_value(PIN_R_CLK, 1);
+    signalDelay();
+    gpio_set_value(PIN_R_CLK, 0);
+    signalDelay();
+    gpio_set_value(PIN_R_LE, 0);
+    signalDelay();
+
+    for (i=7; i>=0; i--) {
+      gpio_set_value(PIN_R_CLK, 1);
+      signalDelay();
+      gpio_set_value(PIN_R_CLK, 0);
+      signalDelay();
+      value |= gpio_get_value(PIN_R_DIN) << i;
+    }
+
+    // read the parity bit
+    gpio_set_value(PIN_R_CLK, 1);
+    signalDelay();
+    gpio_set_value(PIN_R_CLK, 0);
+    signalDelay();
+    ok = gpio_get_value(PIN_R_DIN) == parity(value);
+  }
+  return value;
+}
+
+static void writeReg(unsigned char value, int reg) {
+  int i=7;
+  int ok = 0;
+  while (!ok) {
+    regSelect(reg);
+    for(i=7; i>=0; i--) {
+      gpio_set_value(PIN_R_DOUT, (value >>i) & 0x01);
+      signalDelay();
+      gpio_set_value(PIN_R_CLK, 1);
+      signalDelay();
+      gpio_set_value(PIN_R_CLK, 0);
+      signalDelay();
+    }
+
+    // read the parity bit
+    ok = gpio_get_value(PIN_R_DIN) == parity(value);
+  }
+
+  gpio_set_value(PIN_R_LE, 1);
+  signalDelay();
+  gpio_set_value(PIN_R_CLK, 1);
+  signalDelay();
+  gpio_set_value(PIN_R_CLK, 0);
+  signalDelay();
+  gpio_set_value(PIN_R_LE, 0);
+  signalDelay();
+}
+
+
+// --------------- being a kernel module ------------------------------
 
 /**
  * @brief Read data out of the buffer
