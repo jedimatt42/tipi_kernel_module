@@ -5,4 +5,4 @@ Module.symvers
 *.mod.c
 *.o
 *.cmd
-pinmap.sh
+tipi_gpio.dtbo

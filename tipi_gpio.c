@@ -3,172 +3,103 @@
 #include <linux/fs.h>
 #include <linux/cdev.h>
 #include <linux/uaccess.h>
-#include <linux/gpio.h>
+#include <linux/property.h>
+#include <linux/mod_devicetable.h>
+#include <linux/of_device.h>
 
 /* Meta Information */
 MODULE_LICENSE("GPL");
 MODULE_AUTHOR("Matthew Splett / jedimatt42.com");
 MODULE_DESCRIPTION("TI-99/4A TIPI GPIO");
 
-/* Variables for device and device class */
-static dev_t tipi_control_nr;
-static dev_t tipi_data_nr;
+static struct of_device_id tipi_device_tree_ids[] = {
+  {
+    .compatible = "jedimatt42,tipi"
+  },
+  { }
+};
+MODULE_DEVICE_TABLE(of, tipi_device_tree_ids);
+
+/* device tree driver callbacks */
+static int dt_probe(struct platform_device *pdev);
+static int dt_remove(struct platform_device *pdev);
+
+static struct platform_driver dt_driver = {
+  .probe = dt_probe,
+  .remove = dt_remove,
+  .driver = {
+	  .name = "tipi_gpio_driver",
+	  .of_match_table = tipi_device_tree_ids
+  }
+};
+
+/* On init of device tree driver */
+static int dt_probe(struct platform_device *pdev) {
+  struct device *dev = &pdev->dev;
+  const char *label;
+  int ret;
+
+  /* check for device properties */
+  if (!device_property_present(dev, "label")) {
+    printk("dt_probe - Error! Device property 'label' not found\n");
+    return -1;
+  }
+  ret = device_property_read_string(dev, "label", &label);
+  if (ret) {
+    printk("dt_probe - Error! Could not read 'label'\n");
+    return -1;
+  }
+
+  return 0;
+}
+
+/* On device tree driver cleanup */
+static int dt_remove(struct platform_device *pdev) {
+  return 0;
+}
+
+/* Variables for device /dev/tipi_control /dev/tipi_data and device class */
 static struct class *tipi_class;
+static dev_t tipi_control_nr;
 static struct cdev control_device;
+static dev_t tipi_data_nr;
 static struct cdev data_device;
 
 #define DRIVER_NAME "tipi_gpio"
 #define DRIVER_CLASS "TIPI"
-
-/* TIPI communication pins */
-/* Raspberry PI numbers */
-#define PIN_R_RT 13
-#define PIN_R_CD 21
-#define PIN_R_CLK 6
-#define PIN_R_DOUT 16
-#define PIN_R_DIN 20
-#define PIN_R_LE 19
-
-static struct gpio output_gpios[] = {
-  { PIN_R_RT, GPIOF_OUT_INIT_LOW, "tipi-rt" },
-  { PIN_R_CD, GPIOF_OUT_INIT_LOW, "tipi-cd" },
-  { PIN_R_CLK, GPIOF_OUT_INIT_LOW, "tipi-clk" },
-  { PIN_R_DOUT, GPIOF_OUT_INIT_LOW, "tipi-dout" },
-  { PIN_R_LE, GPIOF_OUT_INIT_LOW, "tipi-le" }
-};
-
-static struct gpio input_gpios[] = {
-  { PIN_R_DIN, GPIOF_DIR_IN, "tipi-din" }
-};
-
-/* Register select values */
-#define SEL_RC 0
-#define SEL_RD 1
-#define SEL_TC 2
-#define SEL_TD 3
 
 #define DEV_REGION_SIZE 2
 #define DEV_NAME_CONTROL "tipi_control"
 #define DEV_NAME_DATA "tipi_data"
 
 
-/*
- * Plan: 
- *  Implement getTC, getTD, setRD, setRC as needed by tipi/services/libtipi_gpio/tipiports.c
- *
- *  Writing a byte to /dev/tipi_control will perform setRC
- *  Writing a byte to /dev/tipi_data will perform setRD
- *
- *  Reading a byte from /dev/tipi_control will perform getTC
- *  Reading a byte from /dev/tipi_data will perform getTD
- *
- *  None of this is implemented yet.
- */
-
-// --------------- TIPI io ----------------------------
-
-// volatile to force slow memory access.
-volatile long delmem = 55;
-
-int delayloop = 50;
-
-inline void signalDelay(void) {
-  int i = 0;
-  for(i = 0; i < delayloop; i++) {
-    delmem *= i;
-  }
-}
-
-inline void regSelect(int reg) {
-  gpio_set_value(PIN_R_RT, reg & 0x02);
-  gpio_set_value(PIN_R_CD, reg & 0x01);
-  signalDelay();
-}
-
-inline unsigned char parity(unsigned char input) {
-  unsigned char piParity = input;
-  piParity ^= piParity >> 4;
-  piParity ^= piParity >> 2;
-  piParity ^= piParity >> 1;
-  return piParity & 0x01;
-}
-
-static unsigned char readReg(int reg) {
-  int i = 7;
-  unsigned char value = 0;
-  int ok = 0;
-  while(! ok) { // retry until parity matches
-    value = 0;
-    regSelect(reg);
-    gpio_set_value(PIN_R_LE, 1);
-    signalDelay();
-    gpio_set_value(PIN_R_CLK, 1);
-    signalDelay();
-    gpio_set_value(PIN_R_CLK, 0);
-    signalDelay();
-    gpio_set_value(PIN_R_LE, 0);
-    signalDelay();
-
-    for (i=7; i>=0; i--) {
-      gpio_set_value(PIN_R_CLK, 1);
-      signalDelay();
-      gpio_set_value(PIN_R_CLK, 0);
-      signalDelay();
-      value |= gpio_get_value(PIN_R_DIN) << i;
-    }
-
-    // read the parity bit
-    gpio_set_value(PIN_R_CLK, 1);
-    signalDelay();
-    gpio_set_value(PIN_R_CLK, 0);
-    signalDelay();
-    ok = gpio_get_value(PIN_R_DIN) == parity(value);
-  }
-  return value;
-}
-
-static void writeReg(unsigned char value, int reg) {
-  int i=7;
-  int ok = 0;
-  while (!ok) {
-    regSelect(reg);
-    for(i=7; i>=0; i--) {
-      gpio_set_value(PIN_R_DOUT, (value >>i) & 0x01);
-      signalDelay();
-      gpio_set_value(PIN_R_CLK, 1);
-      signalDelay();
-      gpio_set_value(PIN_R_CLK, 0);
-      signalDelay();
-    }
-
-    // read the parity bit
-    ok = gpio_get_value(PIN_R_DIN) == parity(value);
-  }
-
-  gpio_set_value(PIN_R_LE, 1);
-  signalDelay();
-  gpio_set_value(PIN_R_CLK, 1);
-  signalDelay();
-  gpio_set_value(PIN_R_CLK, 0);
-  signalDelay();
-  gpio_set_value(PIN_R_LE, 0);
-  signalDelay();
-}
-
-
 // --------------- being a kernel module ------------------------------
 
 /**
- * @brief Read data out of the buffer
+ * @brief Read from the TC (TI Control) register
  */
-static ssize_t driver_read(struct file *File, char *user_buffer, size_t count, loff_t *offs) {
+static ssize_t driver_tc_read(struct file *File, char *user_buffer, size_t count, loff_t *offs) {
   return 0;
 }
 
 /**
- * @brief Write data to buffer
+ * @brief Write to the RC (RPi Control) register
  */
-static ssize_t driver_write(struct file *File, const char *user_buffer, size_t count, loff_t *offs) {
+static ssize_t driver_rc_write(struct file *File, const char *user_buffer, size_t count, loff_t *offs) {
+  return 0;
+}
+
+/**
+ * @brief Read from the TD (TI Data) register
+ */
+static ssize_t driver_td_read(struct file *File, char *user_buffer, size_t count, loff_t *offs) {
+  return 0;
+}
+
+/**
+ * @brief Write to the RD (RPi Data) register
+ */
+static ssize_t driver_rd_write(struct file *File, const char *user_buffer, size_t count, loff_t *offs) {
   return 0;
 }
 
@@ -176,7 +107,6 @@ static ssize_t driver_write(struct file *File, const char *user_buffer, size_t c
  * @brief This function is called, when the device file is opened
  */
 static int driver_open(struct inode *device_file, struct file *instance) {
-  printk("tipi_gpio - open was called!\n");
   return 0;
 }
 
@@ -184,7 +114,6 @@ static int driver_open(struct inode *device_file, struct file *instance) {
  * @brief This function is called, when the device file is opened
  */
 static int driver_close(struct inode *device_file, struct file *instance) {
-  printk("tipi_gpio - close was called!\n");
   return 0;
 }
 
@@ -192,26 +121,32 @@ static struct file_operations control_fops = {
   .owner = THIS_MODULE,
   .open = driver_open,
   .release = driver_close,
-  .read = driver_read,
-  .write = driver_write
+  .read = driver_tc_read,
+  .write = driver_rc_write
 };
 
 static struct file_operations data_fops = {
   .owner = THIS_MODULE,
   .open = driver_open,
-  .release = driver_close
+  .release = driver_close,
+  .read = driver_td_read,
+  .write = driver_rd_write
 };
 
 /**
  * @brief This function is called, when the module is loaded into the kernel
  */
 static int __init ModuleInit(void) {
-  printk("Hello, Kernel!\n");
+  // register device_tree driver
+  if (platform_driver_register(&dt_driver)) {
+    printk("ModuleInit - Error! could not load driver\n");
+    return -1;
+  }
 
   // Allocate a device nr 
   if( alloc_chrdev_region(&tipi_control_nr, 0, DEV_REGION_SIZE, DRIVER_NAME) < 0) {
     printk("Device number for tipi_gpio could not be allocated!\n");
-    return -1;
+    goto CleanupDtDriver;
   }
   tipi_data_nr = tipi_control_nr + 1;
   printk("registerd tipi_control Major: %d, Minor: %d\n", tipi_control_nr >> 20, tipi_control_nr & 0xfffff);
@@ -255,23 +190,8 @@ static int __init ModuleInit(void) {
     goto CleanupFile1;
   }
 
-  // Initialize GPIO access
-
-  if(gpio_request_array(input_gpios, ARRAY_SIZE(input_gpios))) {
-    printk("Can not allocate input pins\n");
-    goto CleanupFile1;
-  }
-
-  if(gpio_request_array(output_gpios, ARRAY_SIZE(output_gpios))) {
-    printk("Can not allocate input pins\n");
-    goto CleanupInputGpios;
-  }
-
   /* success */
   return 0;
-
-CleanupInputGpios:
-  gpio_free_array(input_gpios, ARRAY_SIZE(input_gpios));
 
 CleanupFile1:
   device_destroy(tipi_class, tipi_data_nr);
@@ -284,6 +204,9 @@ CleanupClass:
 
 CleanupDevices:
   unregister_chrdev_region(tipi_control_nr /* the first one */, DEV_REGION_SIZE);
+
+CleanupDtDriver:
+  platform_driver_unregister(&dt_driver);
   return -1;
 }
 
@@ -291,21 +214,13 @@ CleanupDevices:
  * @brief This function is called, when the module is removed from the kernel
  */
 static void __exit ModuleExit(void) {
-  gpio_set_value(PIN_R_RT, 0);
-  gpio_set_value(PIN_R_CD, 0);
-  gpio_set_value(PIN_R_CLK, 0);
-  gpio_set_value(PIN_R_DOUT, 0);
-  gpio_set_value(PIN_R_LE, 0);
-
-  gpio_free_array(input_gpios, ARRAY_SIZE(input_gpios));
-  gpio_free_array(output_gpios, ARRAY_SIZE(output_gpios));
-
   cdev_del(&data_device);
   cdev_del(&control_device);
   device_destroy(tipi_class, tipi_data_nr);
   device_destroy(tipi_class, tipi_control_nr);
   class_destroy(tipi_class);
   unregister_chrdev_region(tipi_control_nr /* the first one */, DEV_REGION_SIZE);
+  platform_driver_unregister(&dt_driver);
   printk("tipi_gpio cleaned up\n");
 }
 
