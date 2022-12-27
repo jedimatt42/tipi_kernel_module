@@ -6,17 +6,15 @@
     target-path = "/";
     __overlay__ {
       tipi_gpio {
-        tipi_pins {
-          compatible = "jedimatt42,tipi";
-          status = "okay";
-          label = "tipi";
-          tipi-rt-gpio = <&gpio 13 1>;
-          tipi-cd-gpio = <&gpio 21 1>;
-          tipi-clk-gpio = <&gpio 6 1>;
-          tipi-dout-gpio = <&gpio 16 1>;
-          tipi-din-gpio = <&gpio 20 0>;
-          tipi-le-gpio = <&gpio 19 1>;
-        };
+	compatible = "jedimatt42,tipi";
+	status = "okay";
+	label = "tipi";
+	tipi-rt-gpio = <&gpio 13 1>;
+	tipi-cd-gpio = <&gpio 21 1>;
+	tipi-clk-gpio = <&gpio 6 1>;
+	tipi-dout-gpio = <&gpio 16 1>;
+	tipi-din-gpio = <&gpio 20 0>;
+	tipi-le-gpio = <&gpio 19 1>;
       };
     };
   };

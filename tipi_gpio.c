@@ -6,6 +6,8 @@
 #include <linux/property.h>
 #include <linux/mod_devicetable.h>
 #include <linux/of_device.h>
+#include <linux/platform_device.h>
+#include <linux/gpio/consumer.h>
 
 /* Meta Information */
 MODULE_LICENSE("GPL");
@@ -33,20 +35,19 @@ static struct platform_driver dt_driver = {
   }
 };
 
+/* GPIO */
+static struct gpio_desc* tipi_rt_gpio_desc = NULL;
+
 /* On init of device tree driver */
 static int dt_probe(struct platform_device *pdev) {
   struct device *dev = &pdev->dev;
-  const char *label;
-  int ret;
 
-  /* check for device properties */
-  if (!device_property_present(dev, "label")) {
-    printk("dt_probe - Error! Device property 'label' not found\n");
-    return -1;
-  }
-  ret = device_property_read_string(dev, "label", &label);
-  if (ret) {
-    printk("dt_probe - Error! Could not read 'label'\n");
+  printk("dt_probe - installing driver...\n");
+
+  /* read from device properties */
+  tipi_rt_gpio_desc = gpiod_get(dev, "tipi-rt-gpio", GPIOD_OUT_LOW);
+  if (IS_ERR(tipi_rt_gpio_desc)) {
+    printk("dt_probe - Error! Could not get 'tipi-rt-gpio'\n");
     return -1;
   }
 
@@ -55,6 +56,8 @@ static int dt_probe(struct platform_device *pdev) {
 
 /* On device tree driver cleanup */
 static int dt_remove(struct platform_device *pdev) {
+  gpiod_put(tipi_rt_gpio_desc);
+  printk("dt_remove - removing driver\n");
   return 0;
 }
 
@@ -142,6 +145,7 @@ static int __init ModuleInit(void) {
     printk("ModuleInit - Error! could not load driver\n");
     return -1;
   }
+  printk("dt_driver - registered\n");
 
   // Allocate a device nr 
   if( alloc_chrdev_region(&tipi_control_nr, 0, DEV_REGION_SIZE, DRIVER_NAME) < 0) {
