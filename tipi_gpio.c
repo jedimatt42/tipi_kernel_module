@@ -36,6 +36,11 @@ static struct platform_driver dt_driver = {
 };
 
 /* GPIO */
+static struct gpio_desc* tipi_clk_gpio_desc = NULL;
+static struct gpio_desc* tipi_rt_gpio_desc = NULL;
+static struct gpio_desc* tipi_dout_gpio_desc = NULL;
+static struct gpio_desc* tipi_le_gpio_desc = NULL;
+static struct gpio_desc* tipi_din_gpio_desc = NULL;
 static struct gpio_desc* tipi_cd_gpio_desc = NULL;
 
 /* On init of device tree driver */
@@ -44,12 +49,57 @@ static int dt_probe(struct platform_device *pdev) {
 
   printk("dt_probe - configuring gpio for driver...\n");
 
+  if (!device_property_present(dev, "tipi-clk-gpio")) {
+    printk("dt_probe - Error! Device property 'tipi-clk-gpio' not found!\n");
+    return -1;
+  }
+  if (!device_property_present(dev, "tipi-rt-gpio")) {
+    printk("dt_probe - Error! Device property 'tipi-rt-gpio' not found!\n");
+    return -1;
+  }
+  if (!device_property_present(dev, "tipi-dout-gpio")) {
+    printk("dt_probe - Error! Device property 'tipi-dout-gpio' not found!\n");
+    return -1;
+  }
+  if (!device_property_present(dev, "tipi-le-gpio")) {
+    printk("dt_probe - Error! Device property 'tipi-le-gpio' not found!\n");
+    return -1;
+  }
+  if (!device_property_present(dev, "tipi-din-gpio")) {
+    printk("dt_probe - Error! Device property 'tipi-din-gpio' not found!\n");
+    return -1;
+  }
   if (!device_property_present(dev, "tipi-cd-gpio")) {
     printk("dt_probe - Error! Device property 'tipi-cd-gpio' not found!\n");
     return -1;
   }
 
   /* read from device properties */
+  tipi_clk_gpio_desc = gpiod_get(dev, "tipi-clk" /* -gpio suffix assumed */, GPIOD_OUT_LOW);
+  if (IS_ERR(tipi_clk_gpio_desc)) {
+    printk("dt_probe - Error! Could not get 'tipi-clk-gpio'\n");
+    return -1;
+  }
+  tipi_rt_gpio_desc = gpiod_get(dev, "tipi-rt" /* -gpio suffix assumed */, GPIOD_OUT_LOW);
+  if (IS_ERR(tipi_rt_gpio_desc)) {
+    printk("dt_probe - Error! Could not get 'tipi-rt-gpio'\n");
+    return -1;
+  }
+  tipi_dout_gpio_desc = gpiod_get(dev, "tipi-dout" /* -gpio suffix assumed */, GPIOD_OUT_LOW);
+  if (IS_ERR(tipi_dout_gpio_desc)) {
+    printk("dt_probe - Error! Could not get 'tipi-dout-gpio'\n");
+    return -1;
+  }
+  tipi_le_gpio_desc = gpiod_get(dev, "tipi-le" /* -gpio suffix assumed */, GPIOD_OUT_LOW);
+  if (IS_ERR(tipi_le_gpio_desc)) {
+    printk("dt_probe - Error! Could not get 'tipi-le-gpio'\n");
+    return -1;
+  }
+  tipi_din_gpio_desc = gpiod_get(dev, "tipi-din" /* -gpio suffix assumed */, GPIOD_OUT_LOW);
+  if (IS_ERR(tipi_din_gpio_desc)) {
+    printk("dt_probe - Error! Could not get 'tipi-din-gpio'\n");
+    return -1;
+  }
   tipi_cd_gpio_desc = gpiod_get(dev, "tipi-cd" /* -gpio suffix assumed */, GPIOD_OUT_LOW);
   if (IS_ERR(tipi_cd_gpio_desc)) {
     printk("dt_probe - Error! Could not get 'tipi-cd-gpio'\n");
