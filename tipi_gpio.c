@@ -14,6 +14,10 @@ MODULE_LICENSE("GPL");
 MODULE_AUTHOR("Matthew Splett / jedimatt42.com");
 MODULE_DESCRIPTION("TI-99/4A TIPI GPIO");
 
+/* device tree driver callbacks */
+static int dt_probe(struct platform_device *pdev);
+static int dt_remove(struct platform_device *pdev);
+
 static struct of_device_id tipi_device_tree_ids[] = {
   {
     .compatible = "jedimatt42,tipi"
@@ -22,32 +26,33 @@ static struct of_device_id tipi_device_tree_ids[] = {
 };
 MODULE_DEVICE_TABLE(of, tipi_device_tree_ids);
 
-/* device tree driver callbacks */
-static int dt_probe(struct platform_device *pdev);
-static int dt_remove(struct platform_device *pdev);
-
 static struct platform_driver dt_driver = {
   .probe = dt_probe,
   .remove = dt_remove,
   .driver = {
-	  .name = "tipi_gpio_driver",
-	  .of_match_table = tipi_device_tree_ids
+    .name = "tipi_driver",
+    .of_match_table = tipi_device_tree_ids
   }
 };
 
 /* GPIO */
-static struct gpio_desc* tipi_rt_gpio_desc = NULL;
+static struct gpio_desc* tipi_cd_gpio_desc = NULL;
 
 /* On init of device tree driver */
 static int dt_probe(struct platform_device *pdev) {
   struct device *dev = &pdev->dev;
 
-  printk("dt_probe - installing driver...\n");
+  printk("dt_probe - configuring gpio for driver...\n");
+
+  if (!device_property_present(dev, "tipi-cd-gpio")) {
+    printk("dt_probe - Error! Device property 'tipi-cd-gpio' not found!\n");
+    return -1;
+  }
 
   /* read from device properties */
-  tipi_rt_gpio_desc = gpiod_get(dev, "tipi-rt-gpio", GPIOD_OUT_LOW);
-  if (IS_ERR(tipi_rt_gpio_desc)) {
-    printk("dt_probe - Error! Could not get 'tipi-rt-gpio'\n");
+  tipi_cd_gpio_desc = gpiod_get(dev, "tipi-cd" /* -gpio suffix assumed */, GPIOD_OUT_LOW);
+  if (IS_ERR(tipi_cd_gpio_desc)) {
+    printk("dt_probe - Error! Could not get 'tipi-cd-gpio'\n");
     return -1;
   }
 
@@ -56,7 +61,7 @@ static int dt_probe(struct platform_device *pdev) {
 
 /* On device tree driver cleanup */
 static int dt_remove(struct platform_device *pdev) {
-  gpiod_put(tipi_rt_gpio_desc);
+  gpiod_put(tipi_cd_gpio_desc);
   printk("dt_remove - removing driver\n");
   return 0;
 }
