@@ -116,6 +116,8 @@ static int dt_remove(struct platform_device *pdev) {
   return 0;
 }
 
+#include "tipi_protocol.h"
+
 /* Variables for device /dev/tipi_control /dev/tipi_data and device class */
 static struct class *tipi_class;
 static dev_t tipi_control_nr;
@@ -137,13 +139,29 @@ static struct cdev data_device;
  * @brief Read from the TC (TI Control) register
  */
 static ssize_t driver_tc_read(struct file *File, char *user_buffer, size_t count, loff_t *offs) {
-  return 0;
+  int not_copied;
+  if (count) {
+    char value = readReg(SEL_TC);
+    not_copied = copy_to_user(user_buffer, &value, 1);
+    return 1 - not_copied;
+  } else {
+    return 0;
+  }
 }
 
 /**
  * @brief Write to the RC (RPi Control) register
  */
 static ssize_t driver_rc_write(struct file *File, const char *user_buffer, size_t count, loff_t *offs) {
+  char value;
+  int not_copied;
+  if (count) {
+    not_copied = copy_from_user(&value, user_buffer, 1);
+    if (not_copied == 0) {
+      writeReg(value, SEL_RC);
+      return 1;
+    }
+  }
   return 0;
 }
 
@@ -151,13 +169,29 @@ static ssize_t driver_rc_write(struct file *File, const char *user_buffer, size_
  * @brief Read from the TD (TI Data) register
  */
 static ssize_t driver_td_read(struct file *File, char *user_buffer, size_t count, loff_t *offs) {
-  return 0;
+  int not_copied;
+  if (count) {
+    char value = readReg(SEL_TD);
+    not_copied = copy_to_user(user_buffer, &value, 1);
+    return 1 - not_copied;
+  } else {
+    return 0;
+  }
 }
 
 /**
  * @brief Write to the RD (RPi Data) register
  */
 static ssize_t driver_rd_write(struct file *File, const char *user_buffer, size_t count, loff_t *offs) {
+  char value;
+  int not_copied;
+  if (count) {
+    not_copied = copy_from_user(&value, user_buffer, 1);
+    if (not_copied == 0) {
+      writeReg(value, SEL_RD);
+      return 1;
+    }
+  }
   return 0;
 }
 

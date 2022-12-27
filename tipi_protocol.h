@@ -2,12 +2,12 @@
 
 /* TIPI communication pins */
 /* Raspberry PI numbers */
-#define PIN_R_RT 13
-#define PIN_R_CD 21
-#define PIN_R_CLK 6
-#define PIN_R_DOUT 16
-#define PIN_R_DIN 20
-#define PIN_R_LE 19
+#define PIN_R_RT tipi_rt_gpio_desc
+#define PIN_R_CD tipi_cd_gpio_desc
+#define PIN_R_CLK tipi_clk_gpio_desc
+#define PIN_R_DOUT tipi_dout_gpio_desc
+#define PIN_R_DIN tipi_din_gpio_desc
+#define PIN_R_LE tipi_le_gpio_desc
 
 /* Register select values */
 #define SEL_RC 0
