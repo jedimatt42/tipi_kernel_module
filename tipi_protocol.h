@@ -34,7 +34,7 @@
 // volatile to force slow memory access.
 volatile long delmem = 55;
 
-int delayloop = 50;
+int delayloop = 25;
 
 inline void signalDelay(void) {
   int i = 0;

@@ -112,6 +112,11 @@ static int dt_probe(struct platform_device *pdev) {
 /* On device tree driver cleanup */
 static int dt_remove(struct platform_device *pdev) {
   gpiod_put(tipi_cd_gpio_desc);
+  gpiod_put(tipi_din_gpio_desc);
+  gpiod_put(tipi_le_gpio_desc);
+  gpiod_put(tipi_dout_gpio_desc);
+  gpiod_put(tipi_rt_gpio_desc);
+  gpiod_put(tipi_clk_gpio_desc);
   printk("dt_remove - removing driver\n");
   return 0;
 }
