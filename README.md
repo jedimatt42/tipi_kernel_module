@@ -52,5 +52,20 @@ First draft, get this working on Raspberry PI OS (Bullseye)
 
 ## Other boards
 
-...
+### Le Potato
+
+... should be able to make this work... 
+
+### Renegade
+
+... also maybe... some of the GPIO is wired oddly.
+
+### Mango PI MQ Pro ( Allwinner D1 RISC-V core )
+
+... maybe
+
+## References
+
+- https://www.kernel.org/doc/Documentation/devicetree/bindings/gpio/gpio.txt
+- https://github.com/Johannes4Linux/Linux_Driver_Tutorial
 
