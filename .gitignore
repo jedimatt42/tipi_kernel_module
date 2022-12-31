@@ -5,4 +5,4 @@ Module.symvers
 *.mod.c
 *.o
 *.cmd
-tipi_gpio.dtbo
+*.dtbo

@@ -41,6 +41,15 @@ First draft, get this working on Raspberry PI OS (Bullseye)
 - Install kernel headers
   - `sudo apt-get install raspberrypi-kernel-headers`
 
+- Compile the kernel module and device-tree overlay
+  - `make`
+
+- Install the kernel module and device-tree overlay
+  - `sudo cp tipi_rpi.dtbo /boot/overlays/tipi.dtbo`
+  - (notice the file rename to `tipi.dtbo`)
+  - edit /boot/config.txt and add:
+    - `dtoverlay=tipi`
+
 ## Other boards
 
 ...

@@ -1,6 +1,6 @@
 obj-m += tipi_gpio.o
 
-all: tipi_gpio.ko tipi_gpio.dtbo
+all: tipi_gpio.ko tipi_rpi.dtbo
 
 tipi_gpio.ko: tipi_gpio.c tipi_protocol.h
 	make -C /lib/modules/$(shell uname -r)/build M=$(PWD) modules
@@ -10,5 +10,5 @@ tipi_gpio.ko: tipi_gpio.c tipi_protocol.h
 
 clean:
 	make -C /lib/modules/$(shell uname -r)/build M=$(PWD) clean
-	rm -f tipi_gpio.dtbo
+	rm -f *.dtbo
 
