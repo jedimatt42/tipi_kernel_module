@@ -25,6 +25,15 @@ This should allow creation of alternative `tipi_gpio.dts`
 overlays that allow the same kernel module code to work 
 on a variety of Linux capable single board computers.
 
+The tipi-reset pin is exported to the sysfs subsystem. 
+
+see https://www.kernel.org/doc/Documentation/gpio/sysfs.txt
+
+It is exported to: `/sys/devices/platform/tipi_gpio/tipi-reset`
+
+Monitoring the reset signal can be handling by `poll` after 
+configuring edge detection to `falling`.
+
 ## Raspberry PI
 
 First draft, get this working on Raspberry PI OS (Bullseye)

@@ -42,6 +42,7 @@ static struct gpio_desc* tipi_dout_gpio_desc = NULL;
 static struct gpio_desc* tipi_le_gpio_desc = NULL;
 static struct gpio_desc* tipi_din_gpio_desc = NULL;
 static struct gpio_desc* tipi_cd_gpio_desc = NULL;
+static struct gpio_desc* tipi_reset_gpio_desc = NULL;
 
 /* On init of device tree driver */
 static int dt_probe(struct platform_device *pdev) {
@@ -73,6 +74,10 @@ static int dt_probe(struct platform_device *pdev) {
     printk("dt_probe - Error! Device property 'tipi-cd-gpio' not found!\n");
     return -1;
   }
+  if (!device_property_present(dev, "tipi-reset-gpio")) {
+    printk("dt_probe - Error! Device property 'tipi-reset-gpio' not found!\n");
+    return -1;
+  }
 
   /* read from device properties */
   tipi_clk_gpio_desc = gpiod_get(dev, "tipi-clk" /* -gpio suffix assumed */, GPIOD_OUT_LOW);
@@ -95,7 +100,7 @@ static int dt_probe(struct platform_device *pdev) {
     printk("dt_probe - Error! Could not get 'tipi-le-gpio'\n");
     return -1;
   }
-  tipi_din_gpio_desc = gpiod_get(dev, "tipi-din" /* -gpio suffix assumed */, GPIOD_OUT_LOW);
+  tipi_din_gpio_desc = gpiod_get(dev, "tipi-din" /* -gpio suffix assumed */, GPIOD_IN);
   if (IS_ERR(tipi_din_gpio_desc)) {
     printk("dt_probe - Error! Could not get 'tipi-din-gpio'\n");
     return -1;
@@ -105,12 +110,30 @@ static int dt_probe(struct platform_device *pdev) {
     printk("dt_probe - Error! Could not get 'tipi-cd-gpio'\n");
     return -1;
   }
+  tipi_reset_gpio_desc = gpiod_get(dev, "tipi-reset" /* -gpio suffix assumed */, GPIOD_IN);
+  if (IS_ERR(tipi_reset_gpio_desc)) {
+    printk("dt_probe - Error! Could not get 'tipi-reset-gpio'\n");
+    return -1;
+  }
+
+  // Export the tipi-reset line for singular handling in user-space.
+  if (gpiod_export(tipi_reset_gpio_desc, false)) {
+    printk("dt_probe - Error! Could not export 'tipi-reset-gpio'\n");
+    return -1;
+  }
+  if (gpiod_export_link(dev, "tipi-reset", tipi_reset_gpio_desc)) {
+    printk("dt_probe - Error! Could not link to export 'tipi-reset-gpio'\n");
+    return -1;
+  }
 
   return 0;
 }
 
 /* On device tree driver cleanup */
 static int dt_remove(struct platform_device *pdev) {
+  gpiod_unexport(tipi_reset_gpio_desc);
+
+  gpiod_put(tipi_reset_gpio_desc);
   gpiod_put(tipi_cd_gpio_desc);
   gpiod_put(tipi_din_gpio_desc);
   gpiod_put(tipi_le_gpio_desc);
