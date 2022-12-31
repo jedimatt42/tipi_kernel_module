@@ -15,7 +15,7 @@
 	tipi-le-gpio = <&gpio 19 0>;
 	tipi-din-gpio = <&gpio 20 0>;
 	tipi-cd-gpio = <&gpio 21 0>;
-        tipi-reset-gpio = <&gpio 26 0>;
+        tipi-reset-gpio = <&gpio 26 17>;
       };
     };
   };
