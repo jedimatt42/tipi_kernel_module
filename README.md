@@ -34,6 +34,20 @@ It is exported to: `/sys/devices/platform/tipi_gpio/tipi-reset`
 Monitoring the reset signal can be handling by `poll` after 
 configuring edge detection to `falling`.
 
+## Params
+
+sig_delay: default value 50 - If the communcation over the 
+  wires from the SBC to the TIPI adapter is not reliable
+  increase this busy loop counter for more signal propagation
+  and settle time.
+
+Configure the param by adding the following line to file 
+/etc/modprobe.d/tipi_gpio.conf:
+
+```
+options tipi_gpio sig_delay=100
+```
+
 ## Raspberry PI
 
 First draft, get this working on Raspberry PI OS (Bullseye)

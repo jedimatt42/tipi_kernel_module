@@ -34,11 +34,10 @@
 // volatile to force slow memory access.
 volatile long delmem = 55;
 
-int delayloop = 25;
-
 inline void signalDelay(void) {
   int i = 0;
-  for(i = 0; i < delayloop; i++) {
+  // sig_delay comes from kernel module parameter in tipi_gpio.c
+  for(i = 0; i < sig_delay; i++) {
     delmem *= i;
   }
 }
