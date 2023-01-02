@@ -1,0 +1,21 @@
+/dts-v1/;
+/plugin/;
+/ {
+  fragment@0 {
+    target-path = "/";
+    __overlay__ {
+      tipi_gpio {
+	compatible = "jedimatt42,tipi";
+	status = "okay";
+	label = "tipi";
+	tipi-clk-gpio = <&gpio1 97 0>;
+	tipi-rt-gpio = <&gpio1 85 0>;
+	tipi-dout-gpio = <&gpio1 81 0>;
+	tipi-le-gpio = <&gpio1 86 0>;
+	tipi-din-gpio = <&gpio1 82 0>;
+	tipi-cd-gpio = <&gpio1 83 0>;
+        tipi-reset-gpio = <&gpio1 84 17>;
+      };
+    };
+  };
+};

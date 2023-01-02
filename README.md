@@ -70,6 +70,19 @@ First draft, get this working on Raspberry PI OS (Bullseye)
 
 ... should be able to make this work... 
 
+#### Armbian - device tree maybe not stable for use yet.
+
+This is an `Amlogic` chip, but most of the details for this
+`Allwinner` chip apply: https://docs.armbian.com/User-Guide_Allwinner_overlays/
+
+- `make` the kernel module. 
+- install the tipi device tree overlay
+  - `sudo armbian-add-overlay tipi_le_potato.dts`
+- load the kernel module
+  - `sudo insmod tipi_gpio.ko`
+
+Issues: tipi-reset-gpio is not exported.
+
 ### Renegade
 
 ... also maybe... some of the GPIO is wired oddly.
