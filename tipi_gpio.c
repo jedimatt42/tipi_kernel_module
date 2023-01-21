@@ -15,10 +15,10 @@ MODULE_AUTHOR("Matthew Splett / jedimatt42.com");
 MODULE_DESCRIPTION("TI-99/4A TIPI GPIO");
 
 /* Kernel module parameters */
-static volatile unsigned int sig_delay = 50;
+static unsigned int sig_delay = 100;
 
 module_param(sig_delay, uint, S_IRUGO);
-MODULE_PARM_DESC(sig_delay, "Minimum delay in cycles between gpio signal changes, default 50");
+MODULE_PARM_DESC(sig_delay, "Minimum delay in cycles between gpio signal changes, default 100");
 
 /* device tree driver callbacks */
 static int dt_probe(struct platform_device *pdev);
@@ -318,6 +318,7 @@ static int __init ModuleInit(void) {
   }
 
   /* success */
+  printk("sig_delay = %u\n", sig_delay);
   return 0;
 
 CleanupFile1:
