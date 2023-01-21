@@ -7,6 +7,7 @@ fi
 
 mkdir -p /lib/modules/`uname -r`/kernel/drivers/tipi
 cp tipi_gpio.ko /lib/modules/`uname -r`/kernel/drivers/tipi/
+cp tipi_rpi.dtbo /boot/overlays/tipi.dtbo
 
 grep tipi_gpio /etc/modules >/dev/null || echo tipi_gpio >> /etc/modules
 
