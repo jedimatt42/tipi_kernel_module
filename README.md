@@ -70,14 +70,10 @@ First draft, get this working on Raspberry PI OS (Bullseye)
 
 ... should be able to make this work... 
 
-#### Armbian - device tree maybe not stable for use yet.
-
-This is an `Amlogic` chip, but most of the details for this
-`Allwinner` chip apply: https://docs.armbian.com/User-Guide_Allwinner_overlays/
-
 - `make` the kernel module. 
 - install the tipi device tree overlay
-  - `sudo armbian-add-overlay tipi_le_potato.dts`
+  - `sudo cp tipi_le_potato.dtbo /opt/librecomputer/libretech-wiring-tool/libre-computer/aml-s905x-cc/dt/tipi.dtbo`
+  - `sudo ldto enable tipi`
 - load the kernel module
   - `sudo insmod tipi_gpio.ko`
 
