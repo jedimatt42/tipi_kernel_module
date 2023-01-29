@@ -7,15 +7,15 @@
     target-path = "/";
     __overlay__ {
       tipi_gpio {
-	compatible = "jedimatt42,tipi";
-	status = "okay";
-	label = "tipi";
-	tipi-clk-gpio = <&gpio 97 0>;
-	tipi-rt-gpio = <&gpio 85 0>;
-	tipi-dout-gpio = <&gpio 81 0>;
-	tipi-le-gpio = <&gpio 86 0>;
-	tipi-din-gpio = <&gpio 82 0>;
-	tipi-cd-gpio = <&gpio 83 0>;
+        compatible = "jedimatt42,tipi";
+        status = "okay";
+        label = "tipi";
+        tipi-clk-gpio = <&gpio 97 0>;
+        tipi-rt-gpio = <&gpio 85 0>;
+        tipi-dout-gpio = <&gpio 81 0>;
+        tipi-le-gpio = <&gpio 86 0>;
+        tipi-din-gpio = <&gpio 82 0>;
+        tipi-cd-gpio = <&gpio 83 0>;
         tipi-reset-gpio = <&gpio 84 17>;
       };
     };
