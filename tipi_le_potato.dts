@@ -17,6 +17,8 @@
         tipi-din-gpio = <&gpio 82 0>;
         tipi-cd-gpio = <&gpio 83 0>;
         tipi-reset-gpio = <&gpio 84 17>;
+        interrupt-parent = <&gpio_intc>;
+        interrupts = <94 0>;
       };
     };
   };
