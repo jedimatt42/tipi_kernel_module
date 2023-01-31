@@ -122,11 +122,6 @@ static int dt_probe(struct platform_device *pdev) {
     return -1;
   }
 
-  // Setup tipi-reset as input with interrupt support
-  if (gpiod_to_irq(tipi_reset_gpio_desc) < 0) {
-    printk("dt_probe - Error! Could not map 'tipi-reset-gpio' to IRQ\n");
-    return -1;
-  }
   // Export the tipi-reset line for singular handling in user-space.
   if (gpiod_export(tipi_reset_gpio_desc, false)) {
     printk("dt_probe - Error! Could not export 'tipi-reset-gpio'\n");
