@@ -70,18 +70,20 @@ First draft, get this working on Raspberry PI OS (Bullseye)
 
 ... should be able to make this work... 
 
+Mostly works, just have to figure out how to enable the interrupt support
+on the tipi-reset-gpio
+
 - `make` the kernel module. 
 - install the tipi device tree overlay
   - `sudo cp tipi_le_potato.dtbo /opt/librecomputer/libretech-wiring-tool/libre-computer/aml-s905x-cc/dt/tipi.dtbo`
   - `sudo ldto enable tipi`
+  - `sudo ldto merge tipi`
 - load the kernel module
   - `sudo insmod tipi_gpio.ko`
 
-Issues: tipi-reset-gpio is not exported.
-
 ### Renegade
 
-... also maybe... some of the GPIO is wired oddly.
+... also maybe... 
 
 ### Mango PI MQ Pro ( Allwinner D1 RISC-V core )
 
