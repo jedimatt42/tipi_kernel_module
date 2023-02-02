@@ -1,6 +1,11 @@
 /dts-v1/;
 /plugin/;
 
+#include <dt-bindings/gpio/gpio.h>
+#include <dt-bindings/gpio/meson-gxl-gpio.h>
+#include <dt-bindings/interrupt-controller/irq.h>
+#include <dt-bindings/interrupt-controller/meson-gic.h>
+
 / {
   compatible = "libretech,cc", "amlogic,s905x", "amlogic,meson-gxl";
   fragment@0 {
@@ -10,15 +15,15 @@
         compatible = "jedimatt42,tipi";
         status = "okay";
         label = "tipi";
-        tipi-clk-gpio = <&gpio 97 0>;
-        tipi-rt-gpio = <&gpio 85 0>;
-        tipi-dout-gpio = <&gpio 81 0>;
-        tipi-le-gpio = <&gpio 86 0>;
-        tipi-din-gpio = <&gpio 82 0>;
-        tipi-cd-gpio = <&gpio 83 0>;
-        tipi-reset-gpio = <&gpio 84 17>;
+        tipi-clk-gpio = <&gpio GPIOX_18 0>;
+        tipi-rt-gpio = <&gpio GPIOX_6 0>;
+        tipi-dout-gpio = <&gpio GPIOX_2 0>;
+        tipi-le-gpio = <&gpio GPIOX_7 0>;
+        tipi-din-gpio = <&gpio GPIOX_3 0>;
+        tipi-cd-gpio = <&gpio GPIOX_4 0>;
+        tipi-reset-gpio = <&gpio GPIOX_5 (GPIO_ACTIVE_LOW | GPIO_PULL_UP)>;
         interrupt-parent = <&gpio_intc>;
-        interrupts = <94 2>;
+        interrupts = <MESON_GIC_GXL_GPIOX_5 IRQ_TYPE_EDGE_FALLING>;
       };
     };
   };
