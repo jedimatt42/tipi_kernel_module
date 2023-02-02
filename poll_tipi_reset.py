@@ -6,12 +6,12 @@ import time
 
 tipi_reset='/sys/devices/platform/tipi_gpio/tipi-reset/'
 
-with open(tipi_reset + '/active_low', 'w') as edge:
+with open(tipi_reset + 'active_low', 'w') as edge:
   edge.write('0')
-with open(tipi_reset + '/edge', 'w') as edge:
+with open(tipi_reset + 'edge', 'w') as edge:
   edge.write('falling')
 
-with open(tipi_reset + '/value', 'r') as reset_value:
+with open(tipi_reset + 'value', 'r') as reset_value:
   poller = select.poll()
   poller.register(reset_value, select.POLLPRI | select.POLLERR )
 
