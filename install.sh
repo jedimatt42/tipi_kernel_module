@@ -14,7 +14,7 @@ echo "options tipi_gpio sig_delay=100" >/etc/modprobe.d/tipi_gpio.conf
 
 # This location only works for Raspberry PI
 cp tipi_rpi.dtbo /boot/overlays/tipi.dtbo
-echo "# Enable TIPI overlay" >> /boot/firmware/config.txt
-echo "dtoverlay=tipi" >> /boot/firmware/config.txt
+
+grep dtoverlay=tipi /boot/firmware/config.txt >/dev/null || echo "dtoverlay=tipi" >> /boot/firmware/config.txt
 
 depmod
