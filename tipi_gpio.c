@@ -19,9 +19,12 @@ MODULE_DESCRIPTION("TI-99/4A TIPI GPIO");
 
 /* Kernel module parameters */
 static unsigned int sig_delay = 100;
+static unsigned int reset_debounce = 5;
 
 module_param(sig_delay, uint, S_IRUGO);
 MODULE_PARM_DESC(sig_delay, "Minimum delay in cycles between gpio signal changes, default 100");
+module_param(reset_debounce, uint, S_IRUGO);
+MODULE_PARM_DESC(reset_debounce, "reset signal debounce time, default 5 microseconds");
 
 /* device tree driver callbacks */
 static int dt_probe(struct platform_device *pdev);
@@ -363,7 +366,7 @@ static int __init ModuleInit(void) {
 
   // -- Register interrupt handler
   gpiod_direction_input(tipi_reset_gpio_desc);
-  gpiod_set_debounce(tipi_reset_gpio_desc, 20);
+  gpiod_set_debounce(tipi_reset_gpio_desc, reset_debounce);
   reset_irq_number = gpiod_to_irq(tipi_reset_gpio_desc);
   printk("tipi_gpio: gpiod_to_irq: %d\n", reset_irq_number);
 
