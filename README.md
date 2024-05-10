@@ -2,12 +2,14 @@
 
 ## tipi_gpio.ko
 
-Creates 2 character device files:
+Creates 3 character device files:
 
 - /dev/tipi_control
 - /dev/tipi_data
+- /dev/tipi_reset
 
-These represent the 4 registers held in the TIPI CPLD. 
+These represent the 4 registers held in the TIPI CPLD, and the 
+incoming reset signal.
 
 | device            | Operation | Register |
 | ----------------- | --------- | -------- |
@@ -15,6 +17,7 @@ These represent the 4 registers held in the TIPI CPLD.
 | /dev/tipi_control | Write     |       RC |
 | /dev/tipi_data    | Read      |       TD |
 | /dev/tipi_data    | Write     |       RD |
+| /dev/tipi_reset   | Poll      |          |
 
 Each platform supported must define a device-tree overlay 
 that defines the tipi GPIO pins. The kernel module refers
@@ -25,14 +28,8 @@ This should allow creation of alternative `tipi_gpio.dts`
 overlays that allow the same kernel module code to work 
 on a variety of Linux capable single board computers.
 
-The tipi-reset pin is exported to the sysfs subsystem. 
-
-see https://www.kernel.org/doc/Documentation/gpio/sysfs.txt
-
-It is exported to: `/sys/devices/platform/tipi_gpio/tipi-reset`
-
-Monitoring the reset signal can be handling by `poll` after 
-configuring edge detection to `falling`.
+Monitoring the reset signal can be handling by `poll` for
+POLLIN.
 
 ## Params
 
@@ -72,6 +69,14 @@ First draft, get this working on Raspberry PI OS (Bullseye)
 
 Mostly works, just have to figure out how to enable the interrupt support
 on the tipi-reset-gpio
+
+I never figured out how to reconfigure interrupts for that pin. They are
+all disabled by default on the Le Potato by default as there are only
+a few interrupts available. On this device tipiwatchdog reads the input in
+a hot loop, using up one of the 4 cores ono the device. 
+
+2024-05-09 : This is broken again after updating away from the sysfs to a character dev
+for the /dev/tipi_reset signal.
 
 - `make` the kernel module. 
 - install the tipi device tree overlay
