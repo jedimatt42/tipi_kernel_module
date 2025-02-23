@@ -99,27 +99,27 @@ static int dt_probe(struct platform_device *pdev) {
     printk("dt_probe - Error! Could not get 'tipi-clk-gpio'\n");
     return -1;
   }
-  tipi_rt_gpio_desc = gpiod_get(dev, "tipi-nib3" /* -gpio suffix assumed */, GPIOD_ASIS);
+  tipi_nib3_gpio_desc = gpiod_get(dev, "tipi-nib3" /* -gpio suffix assumed */, GPIOD_ASIS);
   if (IS_ERR(tipi_nib3_gpio_desc)) {
     printk("dt_probe - Error! Could not get 'tipi-nib3-gpio'\n");
     return -1;
   }
-  tipi_dout_gpio_desc = gpiod_get(dev, "tipi-nib2" /* -gpio suffix assumed */, GPIOD_ASIS);
+  tipi_nib2_gpio_desc = gpiod_get(dev, "tipi-nib2" /* -gpio suffix assumed */, GPIOD_ASIS);
   if (IS_ERR(tipi_nib2_gpio_desc)) {
     printk("dt_probe - Error! Could not get 'tipi-nib2-gpio'\n");
     return -1;
   }
-  tipi_le_gpio_desc = gpiod_get(dev, "tipi-nib1" /* -gpio suffix assumed */, GPIOD_ASIS);
+  tipi_nib1_gpio_desc = gpiod_get(dev, "tipi-nib1" /* -gpio suffix assumed */, GPIOD_ASIS);
   if (IS_ERR(tipi_nib1_gpio_desc)) {
     printk("dt_probe - Error! Could not get 'tipi-nib1-gpio'\n");
     return -1;
   }
-  tipi_din_gpio_desc = gpiod_get(dev, "tipi-nib0" /* -gpio suffix assumed */, GPIOD_ASIS);
+  tipi_nib0_gpio_desc = gpiod_get(dev, "tipi-nib0" /* -gpio suffix assumed */, GPIOD_ASIS);
   if (IS_ERR(tipi_nib0_gpio_desc)) {
     printk("dt_probe - Error! Could not get 'tipi-nib0-gpio'\n");
     return -1;
   }
-  tipi_cd_gpio_desc = gpiod_get(dev, "tipi-nibrst" /* -gpio suffix assumed */, GPIOD_OUT_LOW);
+  tipi_nibrst_gpio_desc = gpiod_get(dev, "tipi-nibrst" /* -gpio suffix assumed */, GPIOD_OUT_LOW);
   if (IS_ERR(tipi_nibrst_gpio_desc)) {
     printk("dt_probe - Error! Could not get 'tipi-nibrst-gpio'\n");
     return -1;
