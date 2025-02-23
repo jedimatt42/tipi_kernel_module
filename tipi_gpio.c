@@ -15,7 +15,8 @@
 /* Meta Information */
 MODULE_LICENSE("GPL");
 MODULE_AUTHOR("Matthew Splett / jedimatt42.com");
-MODULE_DESCRIPTION("TI-99/4A TIPI GPIO");
+MODULE_DESCRIPTION("TI-99/4A TIPI GPIO BUS Driver");
+MODULE_VERSION("2.0");
 
 /* Kernel module parameters */
 static unsigned int sig_delay = 100;
