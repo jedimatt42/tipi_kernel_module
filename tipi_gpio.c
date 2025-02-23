@@ -48,13 +48,15 @@ static struct platform_driver dt_driver = {
 };
 
 /* GPIO */
-static struct gpio_desc* tipi_clk_gpio_desc = NULL;
-static struct gpio_desc* tipi_rt_gpio_desc = NULL;
-static struct gpio_desc* tipi_dout_gpio_desc = NULL;
-static struct gpio_desc* tipi_le_gpio_desc = NULL;
-static struct gpio_desc* tipi_din_gpio_desc = NULL;
-static struct gpio_desc* tipi_cd_gpio_desc = NULL;
 static struct gpio_desc* tipi_reset_gpio_desc = NULL;
+
+static struct gpio_desc* tipi_clk_gpio_desc = NULL;
+static struct gpio_desc* tipi_nibrst_gpio_desc = NULL;
+
+static struct gpio_desc* tipi_nib0_gpio_desc = NULL;
+static struct gpio_desc* tipi_nib1_gpio_desc = NULL;
+static struct gpio_desc* tipi_nib2_gpio_desc = NULL;
+static struct gpio_desc* tipi_nib3_gpio_desc = NULL;
 
 /* On init of device tree driver */
 static int dt_probe(struct platform_device *pdev) {
@@ -66,24 +68,24 @@ static int dt_probe(struct platform_device *pdev) {
     printk("dt_probe - Error! Device property 'tipi-clk-gpio' not found!\n");
     return -1;
   }
-  if (!device_property_present(dev, "tipi-rt-gpio")) {
-    printk("dt_probe - Error! Device property 'tipi-rt-gpio' not found!\n");
+  if (!device_property_present(dev, "tipi-nib3-gpio")) {
+    printk("dt_probe - Error! Device property 'tipi-nib3-gpio' not found!\n");
     return -1;
   }
-  if (!device_property_present(dev, "tipi-dout-gpio")) {
-    printk("dt_probe - Error! Device property 'tipi-dout-gpio' not found!\n");
+  if (!device_property_present(dev, "tipi-nib2-gpio")) {
+    printk("dt_probe - Error! Device property 'tipi-nib2-gpio' not found!\n");
     return -1;
   }
-  if (!device_property_present(dev, "tipi-le-gpio")) {
-    printk("dt_probe - Error! Device property 'tipi-le-gpio' not found!\n");
+  if (!device_property_present(dev, "tipi-nib1-gpio")) {
+    printk("dt_probe - Error! Device property 'tipi-nib1-gpio' not found!\n");
     return -1;
   }
-  if (!device_property_present(dev, "tipi-din-gpio")) {
-    printk("dt_probe - Error! Device property 'tipi-din-gpio' not found!\n");
+  if (!device_property_present(dev, "tipi-nib0-gpio")) {
+    printk("dt_probe - Error! Device property 'tipi-nib0-gpio' not found!\n");
     return -1;
   }
-  if (!device_property_present(dev, "tipi-cd-gpio")) {
-    printk("dt_probe - Error! Device property 'tipi-cd-gpio' not found!\n");
+  if (!device_property_present(dev, "tipi-nibrst-gpio")) {
+    printk("dt_probe - Error! Device property 'tipi-nibrst-gpio' not found!\n");
     return -1;
   }
   if (!device_property_present(dev, "tipi-reset-gpio")) {
@@ -97,29 +99,29 @@ static int dt_probe(struct platform_device *pdev) {
     printk("dt_probe - Error! Could not get 'tipi-clk-gpio'\n");
     return -1;
   }
-  tipi_rt_gpio_desc = gpiod_get(dev, "tipi-rt" /* -gpio suffix assumed */, GPIOD_OUT_LOW);
-  if (IS_ERR(tipi_rt_gpio_desc)) {
-    printk("dt_probe - Error! Could not get 'tipi-rt-gpio'\n");
+  tipi_rt_gpio_desc = gpiod_get(dev, "tipi-nib3" /* -gpio suffix assumed */, GPIOD_ASIS);
+  if (IS_ERR(tipi_nib3_gpio_desc)) {
+    printk("dt_probe - Error! Could not get 'tipi-nib3-gpio'\n");
     return -1;
   }
-  tipi_dout_gpio_desc = gpiod_get(dev, "tipi-dout" /* -gpio suffix assumed */, GPIOD_OUT_LOW);
-  if (IS_ERR(tipi_dout_gpio_desc)) {
-    printk("dt_probe - Error! Could not get 'tipi-dout-gpio'\n");
+  tipi_dout_gpio_desc = gpiod_get(dev, "tipi-nib2" /* -gpio suffix assumed */, GPIOD_ASIS);
+  if (IS_ERR(tipi_nib2_gpio_desc)) {
+    printk("dt_probe - Error! Could not get 'tipi-nib2-gpio'\n");
     return -1;
   }
-  tipi_le_gpio_desc = gpiod_get(dev, "tipi-le" /* -gpio suffix assumed */, GPIOD_OUT_LOW);
-  if (IS_ERR(tipi_le_gpio_desc)) {
-    printk("dt_probe - Error! Could not get 'tipi-le-gpio'\n");
+  tipi_le_gpio_desc = gpiod_get(dev, "tipi-nib1" /* -gpio suffix assumed */, GPIOD_ASIS);
+  if (IS_ERR(tipi_nib1_gpio_desc)) {
+    printk("dt_probe - Error! Could not get 'tipi-nib1-gpio'\n");
     return -1;
   }
-  tipi_din_gpio_desc = gpiod_get(dev, "tipi-din" /* -gpio suffix assumed */, GPIOD_IN);
-  if (IS_ERR(tipi_din_gpio_desc)) {
-    printk("dt_probe - Error! Could not get 'tipi-din-gpio'\n");
+  tipi_din_gpio_desc = gpiod_get(dev, "tipi-nib0" /* -gpio suffix assumed */, GPIOD_ASIS);
+  if (IS_ERR(tipi_nib0_gpio_desc)) {
+    printk("dt_probe - Error! Could not get 'tipi-nib0-gpio'\n");
     return -1;
   }
-  tipi_cd_gpio_desc = gpiod_get(dev, "tipi-cd" /* -gpio suffix assumed */, GPIOD_OUT_LOW);
-  if (IS_ERR(tipi_cd_gpio_desc)) {
-    printk("dt_probe - Error! Could not get 'tipi-cd-gpio'\n");
+  tipi_cd_gpio_desc = gpiod_get(dev, "tipi-nibrst" /* -gpio suffix assumed */, GPIOD_OUT_LOW);
+  if (IS_ERR(tipi_nibrst_gpio_desc)) {
+    printk("dt_probe - Error! Could not get 'tipi-nibrst-gpio'\n");
     return -1;
   }
   tipi_reset_gpio_desc = gpiod_get(dev, "tipi-reset" /* -gpio suffix assumed */, GPIOD_IN);
@@ -134,16 +136,17 @@ static int dt_probe(struct platform_device *pdev) {
 /* On device tree driver cleanup */
 static int dt_remove(struct platform_device *pdev) {
   gpiod_put(tipi_reset_gpio_desc);
-  gpiod_put(tipi_cd_gpio_desc);
-  gpiod_put(tipi_din_gpio_desc);
-  gpiod_put(tipi_le_gpio_desc);
-  gpiod_put(tipi_dout_gpio_desc);
-  gpiod_put(tipi_rt_gpio_desc);
+  gpiod_put(tipi_nibrst_gpio_desc);
+  gpiod_put(tipi_nib0_gpio_desc);
+  gpiod_put(tipi_nib1_gpio_desc);
+  gpiod_put(tipi_nib2_gpio_desc);
+  gpiod_put(tipi_nib3_gpio_desc);
   gpiod_put(tipi_clk_gpio_desc);
   printk("tipi_gpio: dt_remove - removing driver\n");
   return 0;
 }
 
+/* hacky separation of kernel driver code and the bit banging code */
 #include "tipi_protocol.h"
 
 /* Variables for device /dev/tipi_control /dev/tipi_data /dev/tipi_reset and device class */

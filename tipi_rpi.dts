@@ -10,11 +10,11 @@
         status = "okay";
         label = "tipi";
         tipi-clk-gpio = <&gpio 6 0>;
-        tipi-rt-gpio = <&gpio 13 0>;
-        tipi-dout-gpio = <&gpio 16 0>;
-        tipi-le-gpio = <&gpio 19 0>;
-        tipi-din-gpio = <&gpio 20 0>;
-        tipi-cd-gpio = <&gpio 21 0>;
+        tipi-nib3-gpio = <&gpio 13 0>;
+        tipi-nib2-gpio = <&gpio 16 0>;
+        tipi-nib1-gpio = <&gpio 19 0>;
+        tipi-nib0-gpio = <&gpio 20 0>;
+        tipi-nibrst-gpio = <&gpio 21 0>;
         tipi-reset-gpio = <&gpio 26 17>;
       };
     };
