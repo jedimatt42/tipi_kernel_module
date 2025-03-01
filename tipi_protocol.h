@@ -10,11 +10,10 @@
 #define PIN_NIB3 tipi_nib3_gpio_desc
 
 /* Register select values */
-// TODO: check these match the verilog
-#define SEL_RC 0
-#define SEL_RD 1
-#define SEL_TC 2
-#define SEL_TD 3
+#define SEL_RC 3
+#define SEL_RD 2
+#define SEL_TC 1
+#define SEL_TD 0
 
 
 /*
