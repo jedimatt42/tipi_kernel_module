@@ -1,5 +1,10 @@
 #!/bin/bash
 
+if [ "x$(whoami)" != "xroot" ]; then
+  echo "Error, must run as root. Aborting."
+  exit 1
+fi
+
 if [ ! -f tipi_gpio.ko ]; then
   echo "Error no tipi_gpio.ko built. Aborting."
   exit 1
@@ -18,3 +23,8 @@ cp tipi_rpi.dtbo /boot/overlays/tipi.dtbo
 grep dtoverlay=tipi /boot/firmware/config.txt >/dev/null || echo "dtoverlay=tipi" >> /boot/firmware/config.txt
 
 depmod
+
+if [ "${1:x}" = "/r" ]; then
+  echo "Reloading tipi_gpio.ko"
+  insmod /lib/modules/`uname -r`/kernel/drivers/tipi/tipi_gpio.ko
+fi

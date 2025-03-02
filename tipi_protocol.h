@@ -75,12 +75,9 @@ static unsigned char readReg(int reg) {
   gpiod_direction_input(PIN_NIB2);
   gpiod_direction_input(PIN_NIB3);
 
-  // now clock the low 4 bits into the PI
-  gpiod_set_value(PIN_CLK, 1);
+  // after register select, the high nibble should be ready
   signalDelay();
-  gpiod_set_value(PIN_CLK, 0);
-
-  // give the TI time to get the data ready
+  signalDelay();
   signalDelay();
 
   // read the data from the nibbles
@@ -89,7 +86,7 @@ static unsigned char readReg(int reg) {
   value |= gpiod_get_value(PIN_NIB2) << 6;
   value |= gpiod_get_value(PIN_NIB3) << 7;
 
-  // now clock the high 4 bits into the PI
+  // now clock the low 4 bits into the PI
   gpiod_set_value(PIN_CLK, 1);
   signalDelay();
   gpiod_set_value(PIN_CLK, 0);
