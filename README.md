@@ -1,6 +1,11 @@
 # Linux Kernel driver for TIPI gpio 
 
-## tipi_gpio.ko
+## tipi_pibus.ko
+
+This branch implements a 4 bit nibble transfer semi-qspi type 
+protocol for interfacing with the TIPI controller board for
+the Texas Instruments TI-99/4A. Requires corresponding firmware
+on the TIPI board.
 
 Creates 3 character device files:
 
@@ -24,7 +29,7 @@ that defines the tipi GPIO pins. The kernel module refers
 to the declarations in the overlay to access the correct
 pins by name, instead of hard-coding to the device. 
 
-This should allow creation of alternative `tipi_gpio.dts` 
+This should allow creation of alternative `tipi_pibus.dts` 
 overlays that allow the same kernel module code to work 
 on a variety of Linux capable single board computers.
 
@@ -39,10 +44,10 @@ sig_delay: default value 50 - If the communcation over the
   and settle time.
 
 Configure the param by adding the following line to file 
-/etc/modprobe.d/tipi_gpio.conf:
+/etc/modprobe.d/tipi_pibus.conf:
 
 ```
-options tipi_gpio sig_delay=100
+options tipi_pibus sig_delay=100
 ```
 
 ## Raspberry PI
@@ -56,7 +61,7 @@ First draft, get this working on Raspberry PI OS (Bullseye)
   - `make`
 
 - Install the kernel module and device-tree overlay
-  - `sudo cp tipi_rpi.dtbo /boot/overlays/tipi.dtbo`
+  - `sudo cp tipi_pibus.dtbo /boot/overlays/tipi.dtbo`
   - (notice the file rename to `tipi.dtbo`)
   - edit /boot/config.txt and add:
     - `dtoverlay=tipi`

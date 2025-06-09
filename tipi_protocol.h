@@ -17,7 +17,7 @@
 
 
 /*
- *  Implements getTC, getTD, setRD, setRC as needed by tipi/services/libtipi_gpio/tipiports.c
+ *  Implements getTC, getTD, setRD, setRC as needed by tipi/services/libtipi_pibus/tipiports.c
  *
  *  Writing a byte to /dev/tipi_control will perform setRC
  *  Writing a byte to /dev/tipi_data will perform setRD
@@ -33,7 +33,7 @@ volatile long delmem = 55;
 
 inline void signalDelay(void) {
   int i = 0;
-  // sig_delay comes from kernel module parameter in tipi_gpio.c
+  // sig_delay comes from kernel module parameter in tipi_pibus.c
   for(i = 0; i < sig_delay; i++) {
     delmem *= i;
   }

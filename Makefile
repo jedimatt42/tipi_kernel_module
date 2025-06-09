@@ -1,8 +1,8 @@
-obj-m += tipi_gpio.o
+obj-m += tipi_pibus.o
 
-all: tipi_gpio.ko tipi_rpi.dtbo 
+all: tipi_pibus.ko tipi_pibus.dtbo 
 
-tipi_gpio.ko: tipi_gpio.c tipi_protocol.h
+tipi_pibus.ko: tipi_pibus.c tipi_protocol.h
 	make -C /usr/src/linux-headers-$(shell uname -r) M=$(shell pwd) modules
 
 %.pre.dts: %.dts

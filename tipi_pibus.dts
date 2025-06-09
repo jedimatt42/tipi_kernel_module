@@ -5,7 +5,7 @@
   fragment@0 {
     target-path = "/";
     __overlay__ {
-      tipi_gpio {
+      tipi_pibus {
         compatible = "jedimatt42,tipi";
         status = "okay";
         label = "tipi";

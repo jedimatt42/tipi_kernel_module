@@ -15,7 +15,7 @@
 /* Meta Information */
 MODULE_LICENSE("GPL");
 MODULE_AUTHOR("Matthew Splett / jedimatt42.com");
-MODULE_DESCRIPTION("TI-99/4A TIPI GPIO BUS Driver");
+MODULE_DESCRIPTION("TI-99/4A TIPI PIBUS Driver");
 MODULE_VERSION("2.0");
 
 /* Kernel module parameters */
@@ -63,7 +63,7 @@ static struct gpio_desc* tipi_nib3_gpio_desc = NULL;
 static int dt_probe(struct platform_device *pdev) {
   struct device *dev = &pdev->dev;
 
-  printk("tipi_gpio: dt_probe - configuring gpio for driver...\n");
+  printk("tipi_pibus: dt_probe - configuring gpio for driver...\n");
 
   if (!device_property_present(dev, "tipi-clk-gpio")) {
     printk("dt_probe - Error! Device property 'tipi-clk-gpio' not found!\n");
@@ -143,7 +143,7 @@ static int dt_remove(struct platform_device *pdev) {
   gpiod_put(tipi_nib2_gpio_desc);
   gpiod_put(tipi_nib3_gpio_desc);
   gpiod_put(tipi_clk_gpio_desc);
-  printk("tipi_gpio: dt_remove - removing driver\n");
+  printk("tipi_pibus: dt_remove - removing driver\n");
   return 0;
 }
 
@@ -163,7 +163,7 @@ static unsigned int reset_irq_number;
 static int irq_ready = 0;
 static wait_queue_head_t waitqueue;
 
-#define DRIVER_NAME "tipi_gpio"
+#define DRIVER_NAME "tipi_pibus"
 #define DRIVER_CLASS "TIPI"
 
 #define DEV_REGION_SIZE 3
@@ -268,7 +268,7 @@ static struct file_operations data_fops = {
  * @brief ISR for gpio reset pin
  */
 static enum irqreturn gpio_irq_poll_handler(int irq, void* dev_id) {
-  printk("tipi_gpio: irq_poll_handler called\n");
+  printk("tipi_pibus: irq_poll_handler called\n");
   irq_ready = 1;
   wake_up(&waitqueue);
   return IRQ_HANDLED;
@@ -297,13 +297,13 @@ static struct file_operations reset_fops = {
 static int __init ModuleInit(void) {
   // register device_tree driver
   if (platform_driver_register(&dt_driver)) {
-    printk("tipi_gpio: ModuleInit - Error! could not load driver\n");
+    printk("tipi_pibus: ModuleInit - Error! could not load driver\n");
     return -1;
   }
-  printk("tipi_gpio: dt_driver - registered\n");
+  printk("tipi_pibus: dt_driver - registered\n");
 
   if( alloc_chrdev_region(&tipi_control_nr, 0, DEV_REGION_SIZE, DRIVER_NAME) < 0) {
-    printk("Device number for tipi_gpio could not be allocated!\n");
+    printk("Device number for tipi_pibus could not be allocated!\n");
     goto CleanupDtDriver;
   }
   tipi_data_nr = tipi_control_nr + 1;
@@ -314,7 +314,7 @@ static int __init ModuleInit(void) {
 
   // Create device class
   if((tipi_class = class_create(DRIVER_CLASS)) == NULL) {
-    printk("tipi_gpio class can not be created!\n");
+    printk("tipi_pibus class can not be created!\n");
     goto CleanupDevices;
   }
 
@@ -332,7 +332,7 @@ static int __init ModuleInit(void) {
 
   // Registering /dev/tipi_control to kernel
   if(cdev_add(&control_device, tipi_control_nr, 1) == -1) {
-    printk("tipi_gpio: Registering of device to kernel failed!\n");
+    printk("tipi_pibus: Registering of device to kernel failed!\n");
     goto CleanupFile0;
   }
 
@@ -347,7 +347,7 @@ static int __init ModuleInit(void) {
 
   // Registering /dev/tipi_data to kernel
   if(cdev_add(&data_device, tipi_data_nr, 1) == -1) {
-    printk("tipi_gpio: Registering of device to kernel failed!\n");
+    printk("tipi_pibus: Registering of device to kernel failed!\n");
     goto CleanupFile1;
   }
 
@@ -362,7 +362,7 @@ static int __init ModuleInit(void) {
 
   // Registering /dev/tipi_reset to kernel
   if(cdev_add(&reset_device, tipi_reset_nr, 1) == -1) {
-    printk("tipi_gpio: Registering of device to kernel failed!\n");
+    printk("tipi_pibus: Registering of device to kernel failed!\n");
     goto CleanupFile2;
   }
 
@@ -372,16 +372,16 @@ static int __init ModuleInit(void) {
   gpiod_direction_input(tipi_reset_gpio_desc);
   gpiod_set_debounce(tipi_reset_gpio_desc, reset_debounce);
   reset_irq_number = gpiod_to_irq(tipi_reset_gpio_desc);
-  printk("tipi_gpio: gpiod_to_irq: %d\n", reset_irq_number);
+  printk("tipi_pibus: gpiod_to_irq: %d\n", reset_irq_number);
 
   if (request_irq(reset_irq_number, gpio_irq_poll_handler, IRQF_TRIGGER_FALLING, "tipi_reset_poll", NULL) != 0) {
-    printk("tipi_gpio: Error requesting interrupt for irq_number: %d\n", reset_irq_number);
+    printk("tipi_pibus: Error requesting interrupt for irq_number: %d\n", reset_irq_number);
     goto CleanupIrq;
   }
   
   // Allocate a device nr 
   /* success */
-  printk("tipi_gpio: sig_delay = %u\n", sig_delay);
+  printk("tipi_pibus: sig_delay = %u\n", sig_delay);
   return 0;
 
 CleanupIrq:
@@ -421,7 +421,7 @@ static void __exit ModuleExit(void) {
   class_destroy(tipi_class);
   unregister_chrdev_region(tipi_control_nr /* the first one */, DEV_REGION_SIZE);
   platform_driver_unregister(&dt_driver);
-  printk("tipi_gpio cleaned up\n");
+  printk("tipi_pibus cleaned up\n");
 }
 
 module_init(ModuleInit);
