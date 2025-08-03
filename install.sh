@@ -18,7 +18,7 @@ grep tipi_pibus /etc/modules >/dev/null || echo tipi_pibus >> /etc/modules
 echo "options tipi_pibus sig_delay=100" >/etc/modprobe.d/tipi_pibus.conf
 
 # This location only works for Raspberry PI
-cp tipi_rpi.dtbo /boot/overlays/tipi.dtbo
+cp tipi_pibus.dtbo /boot/overlays/tipi.dtbo
 
 grep dtoverlay=tipi /boot/firmware/config.txt >/dev/null || echo "dtoverlay=tipi" >> /boot/firmware/config.txt
 

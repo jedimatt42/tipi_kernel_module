@@ -28,15 +28,8 @@
 
 // --------------- TIPI io ----------------------------
 
-// volatile to force slow memory access.
-volatile long delmem = 55;
-
-inline void signalDelay(void) {
-  int i = 0;
-  // sig_delay comes from kernel module parameter in tipi_pibus.c
-  for(i = 0; i < sig_delay; i++) {
-    delmem *= i;
-  }
+inline void signalDelay(int x) {
+  ndelay(x * sig_delay);
 }
 
 inline void regSelect(int reg) {
@@ -48,7 +41,7 @@ inline void regSelect(int reg) {
 
   // set nibrst HIGH, delay, then LOW
   gpiod_set_value(PIN_NIBRST, 1);
-  signalDelay();
+  signalDelay(1);
   gpiod_set_value(PIN_NIBRST, 0);
 
   // set nib0-nib3 to value of reg
@@ -56,11 +49,11 @@ inline void regSelect(int reg) {
   gpiod_set_value(PIN_NIB1, reg & 0x02);
   gpiod_set_value(PIN_NIB2, reg & 0x04);
   gpiod_set_value(PIN_NIB3, reg & 0x08);
-  signalDelay();
+  signalDelay(1);
   
   // now clk the data into the register
   gpiod_set_value(PIN_CLK, 1);
-  signalDelay();
+  signalDelay(1);
   gpiod_set_value(PIN_CLK, 0);
 }
 
@@ -76,9 +69,7 @@ static unsigned char readReg(int reg) {
   gpiod_direction_input(PIN_NIB3);
 
   // after register select, the high nibble should be ready
-  signalDelay();
-  signalDelay();
-  signalDelay();
+  signalDelay(2);
 
   // read the data from the nibbles
   value |= gpiod_get_value(PIN_NIB0) << 4;
@@ -88,11 +79,11 @@ static unsigned char readReg(int reg) {
 
   // now clock the low 4 bits into the PI
   gpiod_set_value(PIN_CLK, 1);
-  signalDelay();
+  signalDelay(1);
   gpiod_set_value(PIN_CLK, 0);
 
   // give the TI time to get the data ready
-  signalDelay();
+  signalDelay(1);
 
   // read the data from the nibbles
   value |= gpiod_get_value(PIN_NIB0);
@@ -113,11 +104,11 @@ static void writeReg(unsigned char value, int reg) {
   gpiod_set_value(PIN_NIB1, value & 0x20);
   gpiod_set_value(PIN_NIB2, value & 0x40);
   gpiod_set_value(PIN_NIB3, value & 0x80);
-  signalDelay();
+  signalDelay(1);
 
   // now clk the data into the register
   gpiod_set_value(PIN_CLK, 1);
-  signalDelay();
+  signalDelay(1);
   gpiod_set_value(PIN_CLK, 0);
 
   // now set nib0-nib3 to high 4 bits of value
@@ -125,11 +116,11 @@ static void writeReg(unsigned char value, int reg) {
   gpiod_set_value(PIN_NIB1, value & 0x02);
   gpiod_set_value(PIN_NIB2, value & 0x04);
   gpiod_set_value(PIN_NIB3, value & 0x08);
-  signalDelay();
+  signalDelay(1);
 
   // now clk that data into the register
   gpiod_set_value(PIN_CLK, 1);
-  signalDelay();
+  signalDelay(1);
   gpiod_set_value(PIN_CLK, 0);
 }
 
