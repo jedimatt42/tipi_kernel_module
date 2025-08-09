@@ -28,7 +28,7 @@ MODULE_PARM_DESC(reset_debounce, "reset signal debounce time, default 5 microsec
 
 /* device tree driver callbacks */
 static int dt_probe(struct platform_device *pdev);
-static int dt_remove(struct platform_device *pdev);
+static void dt_remove(struct platform_device *pdev);
 
 static struct of_device_id tipi_device_tree_ids[] = {
   {
@@ -132,7 +132,7 @@ static int dt_probe(struct platform_device *pdev) {
 }
 
 /* On device tree driver cleanup */
-static int dt_remove(struct platform_device *pdev) {
+static void dt_remove(struct platform_device *pdev) {
   gpiod_put(tipi_reset_gpio_desc);
   gpiod_put(tipi_cd_gpio_desc);
   gpiod_put(tipi_din_gpio_desc);
@@ -141,7 +141,6 @@ static int dt_remove(struct platform_device *pdev) {
   gpiod_put(tipi_rt_gpio_desc);
   gpiod_put(tipi_clk_gpio_desc);
   printk("tipi_gpio: dt_remove - removing driver\n");
-  return 0;
 }
 
 #include "tipi_protocol.h"
